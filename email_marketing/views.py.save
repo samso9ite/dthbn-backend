@@ -1,0 +1,7 @@
+from django.shortcuts import render
+from email_marketing import urls
+from django.http import HttpResponse
+
+# Create your views here.
+def push_mails(request):
+    if 'mailMarketing/send_emails/'

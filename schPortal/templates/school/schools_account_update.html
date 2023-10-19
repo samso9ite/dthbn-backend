@@ -1,0 +1,254 @@
+{% extends "school/base.html" %}
+{% load static %}
+{% block body %}
+        <!-- #END# Left Sidebar -->
+        <!-- Right Sidebar -->
+{% if user.is_authenticated %}
+           <form action="" id="schProfileForm" method="post"  onkeydown="return event.key != 'Enter';" enctype="multipart/form-data" data-region-url="{% url 'schoolPortal:ajax_load_region' %}" novalidate>
+            {% csrf_token %}
+            <section class="content">
+                {% if form.errors %}
+                                <!-- Error messaging -->
+                                <div id="errors">
+                                    <div class="inner">
+                                        <ul>
+                                            {% for field in form %}
+                                                {% if field.errors %}<li><div class="alert alert-danger"> <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a> <strong>{{ field.label }}</strong>  {{ field.errors|striptags }}</div></li>{% endif %}
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                    {% endif %}
+                   <div class="container-fluid" style="">
+                       <div class="row clearfix">
+                        <div class="card" >
+                            <div class="header">
+                                    <h4>UPDATE SCHOOL PROFILE</h4>
+                            </div>
+                                <div class="body">
+                                       <div class="row clearfix">
+                                            <div class="image col-sm-6" style="margin-left: 2%;">
+                                                <p><b>SCHOOL LOGO</b></p>
+                                                {% if form.instance.sch_logo %}
+                                                    <img id="ShowImage"  src="{{form.instance.sch_logo.url}}" width="112" height="112" alt="User" style="border: 8px solid #efefef; border-radius: 100%"/>
+                                                    {% else %}
+                                                    <img id="ShowImage"  src="{% static 'general/images/default_avtar.jpg' %}" width="112" height="112" alt="User" style="border: 8px solid #efefef; border-radius: 100%"/>
+                                                    {% endif %}
+                                                    <input name="sch_logo" type="file"  onchange="readFIle(this);"  multiple />
+                                                
+                                                
+                                            </div>
+                                            <div class="col-sm-4">
+                                                        <p><b>SCHOOL CODE</b></p><br><br><br><br><br>
+                                                        <div class="form-group form-float">
+                                                            <div class="form-line">
+                                                                <input type="text" class="form-control" value="{{user.code|upper}}" readonly>
+                                                                <label class="form-label">School Code</label>
+                                                            </div>
+                                                        </div>
+                                             </div>
+                                        
+
+                                <div class="col-sm-4" style="margin-top:5%">
+                                    <div class="form-group">
+                                            <p><b>SCHOOL NAME</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    <input  type="text" class="form-control" value="{{user.username|title}}" readonly>
+                                                    <label class="form-label">School Name</label>
+                                                </div>
+                                            </div>
+                                    </div>
+                                </div>
+
+                            <div class="col-sm-4" style="margin-top:5%">
+                                <div class="form-group">
+                                    <p><b>SCHOOL ADDRESS</b></p>
+                                    <div class="form-group form-float">
+                                        <div class="form-line">
+                                            {% if form.instance.address %}
+                                            <input type="text" name="address" class="form-control" value="{{form.instance.address}}">
+                                           
+                                            {% else %}
+                                                <input type="text" name="address" class="form-control" value="">
+                                                <label class="form-label">School Address</label>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            <div class="col-sm-4" style="margin-top:5%">
+                                <p><b>SPECIALTY</b></p>
+                                    <div class="form-group">
+                                        <!-- {% for label in user.programme %} 
+                                            {{label}}
+                                        {% endfor %} -->
+                                        <!-- {% for data in user.programme %}
+                                            {{data|title}}
+                                        {% endfor %} -->
+                                        {% for data in user.programme %}
+                                            {{data|slugify|title}}
+                                        {% endfor %}
+                                      
+                                   
+                          </div></div>
+
+                                                   
+                        <div class="col-sm-4">
+                            <div class="form-group">
+                                <div class="form-line">
+                                <p><b>STATE</b></p>
+                                {% if form.instance.state %}
+                                    <input type="text" value="{{form.instance.state}}" name="state" class="form-control"  value="">
+                                {% else %}
+                                    <input type="text" name="state" class="form-control"  value="">
+                                {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                            <div class="col-sm-4">
+                                <div class="form-group">
+                                    <p><b>LOCAL GOVERMENT AREA</b></p>
+                                    <div class="form-group form-float">
+                                        <div class="form-line">
+                                            {% if form.instance.region %}
+                                            <input type="text" value="{{form.instance.region}}" name="region" class="form-control"  value="">
+                                        {% else %}
+                                            <input type="text" name="region" class="form-control"  value="">
+                                        {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                    <div class="form-group">
+                                            <p><b>POSTAL ADDRESS</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    {% if form.instance.postal_number %}
+                                                        <input type="text" value="{{form.instance.postal_number}}" name="postal_number" class="form-control"  value="">
+                                                    {% else %}
+                                                        <input type="text" name="postal_number" class="form-control"  value="">
+                                                    {% endif %}
+                                                        <label class="form-label">Ex: P.O BOX 1990</label>
+                                                </div>
+                                            </div>
+                                    </div>
+                            </div>
+                    
+                    <div class="row clearfix">
+                                                    
+                            <div class="col-sm-4">
+                                    <div class="form-group">
+                                            <p><b>HOTLINE</b></p>
+                                            <div class="form-group form-float">
+                                                    <div class="form-line">
+                                                        
+                                                        <input type="text" name="phone_number" class="form-control"  value="{{user.phone_number}}">
+                                                        <label class="form-label">+2348124451038</label>
+                                                    </div>
+                                            </div>
+                                    </div>
+                                </div>
+
+                            <div class="col-sm-4">
+                                <div class="form-group">
+                                    <p><b>EMAIL</b></p>
+                                    <div class="form-group form-float">
+                                        <div class="form-line">
+                                            
+                                            <input type="text" name="email" class="form-control"  value="{{user.email|lower}}" readonly>
+                                            <label= class="form-label">info@dentaltherapist.com</label=>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                             <div class="col-sm-4">
+                                <div class="form-group">
+                                    <p><b>HOD'S NAME</b></p>
+                                    <div class="form-group form-float">
+                                        <div class="form-line">
+                                            
+                                            {% if form.instance.hod_name %}
+                                            <input type="text"name="hod_name" class="form-control"  value="{{form.instance.hod_name}}">
+                                        {% else %}
+                                            <input type="text"name="hod_name" class="form-control"  value="">
+                                        {% endif %}
+                                            <label class="form-label">Mr. Ajanaku Ajibade</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>                 
+                    
+                    <div class="row clearfix">
+                             <div class="col-sm-4">
+                                <div class="form-group">
+                                    <p><b>HOD'S Email</b></p>
+                                    <div class="form-group form-float">
+                                        <div class="form-line">
+                                            {% if form.instance.hod_email %}
+                                                <input type="text"name="hod_email" class="form-control"  value="{{form.instance.hod_email}}">
+                                            {% else %}
+                                                <input type="text"name="hod_email" class="form-control"  value="">
+                                            {% endif %}
+                                                <label class="form-label">HOD@dentaltherapist.com</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                             <div class="col-sm-4">
+                                <div class="form-group"> 
+                                    <p><b>HOD'S Phone Number</b></p>
+                                    <div class="form-group form-float">
+                                        <div class="form-line">
+                                            {% if form.instance.hod_phone %}
+                                            <input type="text"name="hod_phone" class="form-control"  value="{{form.instance.hod_phone}}">
+                                        {% else %}
+                                            <input type="text"name="hod_phone" class="form-control"  value="">
+                                        {% endif %}
+                                            <label class="form-label">+234 879 7936 879</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                             
+                    </div>
+                  
+                        </div>
+                        </section>
+                    <!--End of Office Details-->
+
+        <section class="content">
+                <div class="container-fluid">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin-top: -10%">
+                                <div class="button-demo">
+                                        <button type="submit" name="submit" class="btn btn-block btn-lg btn-success waves-effect"><h5>SUBMIT</h5></button>
+                                </div>
+                        </div>
+                </div>
+        </section>
+      </form>
+{% endif %}
+      <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+      <!-- <script>
+          $("#id_region").change(function (){
+            var url = $("#schProfileForm").attr("data-region-url");
+            var regionId = $(this).val();
+
+            $.ajax({
+                url: url,
+                data: {
+                    'country': countryId
+                },
+                success: function (data) {
+                    $("#id_region").html(data);
+                }
+            });
+          });
+      </script> -->
+{% endblock %}
+
+

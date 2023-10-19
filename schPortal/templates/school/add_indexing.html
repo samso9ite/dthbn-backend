@@ -1,0 +1,949 @@
+{% extends "school/base.html" %}
+{% load static %}
+{% block body %}
+<!-- #END# Left Sidebar -->
+        <!-- Right Sidebar -->
+        
+        
+ <!--Personal Details-->
+   <form action="#"  method="post"  onkeydown="return event.key != 'Enter';" enctype="multipart/form-data">
+    {% csrf_token %}
+    <section class="content">
+        <div class="container-fluid">
+            {% if form.errors %}
+            <!-- Error messaging -->
+            <div id="errors">
+                <div class="inner">
+                    <ul>
+                        {% for field in form %}
+                            {% if field.errors %}<li><div class="alert alert-danger"> <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a> <strong>{{ field.label }}</strong>  {{ field.errors|striptags }}</div></li>{% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            {% for message in messages %}
+
+                    <div class="alert alert-success">
+                        <a class="close" href="#" data-dismiss="alert">×</a>
+
+                        {{ message }}
+
+                    </div>
+            {% endfor %}
+            <div class="row clearfix">
+                       <div class="card" >
+                            <div class="header">
+                                    <h4> STUDENT DETAILS</h4>
+                            </div>
+                                <div class="body">
+                                       <div class="row clearfix">
+                                           <!--<div class="col-sm-6">-->
+                                                <div class="image col-md-8" style="margin-left: 2%;">
+                                                    {% if form.instance.profile_image %}
+                                                    <img id="ShowImage"  src="{{form.instance.profile_image.url}}" width="112" height="112" alt="User" style="border: 8px solid #efefef; border-radius: 100%"/>
+                                                    {% else %}
+                                                    <img id="ShowImage"  src="{% static 'general/images/default_avtar.jpg' %}" width="112" height="112" alt="User" style="border: 8px solid #efefef; border-radius: 100%"/>
+                                                    {% endif %}
+                                                    <input name="profile_image" type="file" required  onchange="readFIle(this);"  multiple />
+                                                </div>
+
+                                                <!-- <div class="form-group">
+                                                    <p><b>GENDER</b></p>
+                                                    {% if form.instance.sex == 'male' %}
+                                                        <input type="radio" value="male" name="sex" id="male" class="with-gap "  checked required> 
+                                                    {% else %}
+                                                        <input type="radio" value="male" name="sex" id="male" class="with-gap "   required>
+                                                    {% endif %}
+                                                    <label for="male">Male</label>
+                                                    {% if form.instance.sex == 'female' %}   
+                                                        <input type="radio" value="female" name="sex" id="female" class="with-gap"  checked required>
+                                                    {% else %}
+                                                    <input type="radio" value="female" name="sex" id="female" class="with-gap"   required>
+                                                    {% endif %}
+                                                    <label for="female" class="m-l-20">Female</label>
+                                            </div> -->
+                                        
+
+                                <div class="row clearfix">
+                                <div class="col-sm-4" style="margin-top:5%">
+                                    <div class="form-group" style="margin-left:20px">
+                                            <p><b>NAME OF INSTITUTION</b></p>
+                                            <div class="form-group form-float">
+                                                    <div class="form-line">
+                                                        <input type="text" value="{{user.username}} " readonly class="form-control" name="school">
+                                                        <label class="form-label">Name Of Institution</label>
+                                                    </div>
+                                                </div>
+                                    </div>
+                                </div>
+                            
+
+                        <div class="col-sm-4" style="margin-top:5%">
+                                <div class="form-group">
+                                    <p><b>CADRE</b></p>
+                                    <div class="form-line">
+                                            {{form.cadre}}
+                                    </div>
+                                          
+                                </div>
+                        </div>
+                            
+                            <div class="col-sm-4" style="margin-top:5%">
+                                <div class="form-group">
+                                    <p><b>GENDER</b></p>
+                                    {% if form.instance.sex == 'male' %}
+                                        <input type="radio" value="male" name="sex" id="male" class="with-gap "  checked required> 
+                                    {% else %}
+                                        <input type="radio" value="male" name="sex" id="male" class="with-gap "   required>
+                                    {% endif %}
+                                    <label for="male">Male</label>
+                                    {% if form.instance.sex == 'female' %}   
+                                        <input type="radio" value="female" name="sex" id="female" class="with-gap"  checked required>
+                                    {% else %}
+                                    <input type="radio" value="female" name="sex" id="female" class="with-gap"   required>
+                                    {% endif %}
+                                    <label for="female" class="m-l-20">Female</label>
+                                        </div>
+
+                                    
+                            </div>
+                    </div>
+                    </div>
+                    <div class="row clearfix" style="">
+                            <div class="col-sm-4">
+                                    <div class="form-group">
+                                            <p><b>FIRST NAME</b></p>
+                                            <div class="form-group form-float">
+                                                    <div class="form-line">
+                                                        {{form.first_name}}
+                                                        <!-- <input type="text" class="form-control" name="first_name" id="first_name" onkeyup='saveValue(this);'> -->
+                                                        <label class="form-label">first name</label>
+                                                    </div>
+                                            </div>
+                                    </div>
+                                </div>
+
+                            <div class="col-sm-4">
+                                <div class="form-group">
+                                    <p><b>Middle name</b></p>
+                                    <div class="form-group form-float">
+                                        <div class="form-line">
+                                            {{form.middle_name}}
+                                            <!-- <input type="text" class="form-control" name="middle_name" id="middle_name" onkeyup='saveValue(this);'> -->
+                                            <label class="form-label">Middle Name</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-4">
+                                    <div class="form-group">
+                                            <p><b>Surname</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    {{form.surname}}
+                                                    <!-- <input type="text" class="form-control" name="surname"  id="last_name" onkeyup='saveValue(this);'> -->
+                                                    <label class="form-label">Surname</label>
+                                                </div>
+                                            </div>
+                                    </div>
+                            </div>
+                    </div>
+
+                    <div class="row clearfix" style="">
+                                                    
+                            <div class="col-sm-4">
+                                    <div class="form-group">
+                                            <p><b>AGE</b></p>
+                                            <div class="form-group form-float">
+                                                    <div class="form-line">
+                                                        {{form.age}}
+                                                        <!-- <input type="text" class="form-control" name="age"  id="age" onkeyup='saveValue(this);'> -->
+                                                        <label class="form-label">Ex: 35 years</label>
+                                                    </div>
+                                            </div>
+                                    </div>
+                                </div>
+
+                            <div class="col-sm-4">
+                                <div class="form-group">
+                                    <p><b>TELEPHONE</b></p>
+                                    <div class="form-group form-float">
+                                        <div class="form-line">
+                                            {{form.telephone}}
+                                            <!-- <input type="text" class="form-control" name="telephone"  id="phone" onkeyup='saveValue(this);'> -->
+                                            <label class="form-label">Ex: +234 8124456890</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+
+                                <div class="col-sm-4">
+                                    <div class="form-group">
+                                        <p><b>EMAIL</b></p>
+                                        <div class="form-group form-float">
+                                            <div class="form-line">
+                                                {{form.email}}
+                                                <!-- <input type="text" class="form-control" name="email"  id="email" onkeyup='saveValue(this);'> -->
+                                                <label class="form-label">Ex: ayoola@gmail.com</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                 
+                                </div>
+                                </div>
+
+                                <div class="row clearfix" style="">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <p><b>NATIONALITY</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    {{form.nationality}}
+                                                    <!-- <input type="text" class="form-control" name="nationality"  id="nationality" onkeyup='saveValue(this);'> -->
+                                                    <label class="form-label">Ex: Nigerian</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4">
+                                            <div class="form-group">
+                                                <div class="form-line">
+
+                                                    <p><b>STATE OF ORIGIN</b></p>
+                                                    {{form.state}}
+                                                   
+                                                      
+                                                  
+                                                    </div>
+                                                    </div>
+                                    </div>
+        
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <p><b>RELIGION</b></p>
+                                            {{form.religion}}
+                                           
+                                        </div>
+                                    </div>
+        
+                                       
+                                </div>
+
+                                <div style="">
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <p><b>MARITAL STATUS</b></p>
+                                                {{form.marital_status}}
+                                            </div>
+                                        </div>
+                                    </div>
+        
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <p><b>PERMANENT ADDRESS</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    {{form.permanent_address}}
+                                                    <!-- <input type="text" class="form-control" name="permanent_address"  id="residential_address" onkeyup='saveValue(this);'> -->
+                                                    <label class="form-label">Ex: 10, Ojuelgba road Surulere Lagos.</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+        
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <p><b>PLACE OF WORK</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    {{form.place_of_work}}
+                                                    <!-- <input type="text" class="form-control" name="place_of_work"  id="office_name" onkeyup='saveValue(this);'> -->
+                                                    <label class="form-label">Ex: Divine Therapist Clinic</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            
+
+                                <div class="" style=""></div>
+                                    <div class="col-sm-4">
+                                            <div class="form-group">
+                                                    <p><b>SCHOOL ATTENDED WITH DATE</b></p>
+                                                    <div class="form-group form-float">
+                                                            <div class="form-line">
+                                                                {{form.school_attended1}}
+                                                                <!-- <input type="text" class="form-control" name="school_attended1" id="ssce" onkeyup='saveValue(this);'> -->
+                                                                <label class="form-label">Primary School  (1995- 2001)</label>
+                                                            </div>
+                                                    </div>
+                                            </div>
+                                        </div>
+        
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <p><b>SCHOOL ATTENDED WITH DATE</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    {{form.school_attended2}}
+                                                    <!-- <input type="text" class="form-control" name="school_attended2" id="degree" onkeyup='saveValue(this);'> -->
+                                                    <label class="form-label">Senior Secondary School (2000 - 2003) </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+        
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <p><b>SCHOOL ATTENDED WITH DATE</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    {{form.school_attended3}}
+                                                    <!-- <input type="text" class="form-control" name="school_attended3" id="msc" onkeyup='saveValue(this);'> -->
+                                                    <label class="form-label">Tertiary Institution (2004 - 2009) </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            
+                                <div class="row clearfix" style="">
+                                    <div class="col-sm-4">
+                                            <div class="form-group">
+                                                    <p><b>QUALIFICATION WITH DATE</b></p>
+                                                    <div class="form-group form-float">
+                                                            <div class="form-line">
+                                                                {{form.qualification1}}
+                                                                <!-- <input type="text" class="form-control" name="qualification1" id="prof_q1" onkeyup='saveValue(this);'> -->
+                                                                <label class="form-label">Primary School Leaving Certificate (1995- 2001)</label>
+                                                            </div>
+                                                    </div>
+                                            </div>
+                                        </div>
+        
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <p><b>QUALIFICATION WITH DATE</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    {{form.qualification2}}
+                                                    <!-- <input type="text" class="form-control" name="qualification2" id="prof_q2" onkeyup='saveValue(this);'> -->
+                                                    <label class="form-label">Secondary School Leaving Certificate (2001 - 2004) </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+        
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                <p><b>QUALIFICATION WITH DATE</b></p>
+                                                <div class="form-group form-float">
+                                                    <div class="form-line">
+                                                        {{form.qualification3}}
+                                                        <!-- <input type="text" class="form-control" name="qualification3" id="prof_q3" onkeyup='saveValue(this);'> -->
+                                                        <label class="form-label">Tertiary Certificate (2004 - 2007) </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+
+                                <div class="row clearfix" style="">
+                                    <div class="col-sm-4">
+                                            <div class="form-group">
+                                                    <p><b>YEAR OF ADMISSION</b></p>
+                                                    <div class="form-group form-float">
+                                                            <div class="form-line">
+                                                                {{form.admission_year}}
+                                                                <!-- <input type="text" class="form-control" name="admission_year" id="year_of_admission" onkeyup='saveValue(this);'> -->
+                                                                <label class="form-label">2015</label>
+                                                            </div>
+                                                    </div>
+                                            </div>
+                                        </div>
+        
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <p><b>YEAR OF GRADUATION</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    {{form.graduation_year}}
+                                                    <!-- <input type="text" class="form-control" name="graduation_year" id="year_of_graduation" onkeyup='saveValue(this);'> -->
+                                                    <label class="form-label">2018</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+        
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                <p><b>CONTACT ADDRESS</b></p>
+                                                <div class="form-group form-float">
+                                                    <div class="form-line">
+                                                        {{form.contact_address}}
+                                                        <!-- <input type="text" class="form-control" name="contact_address" id="address" onkeyup='saveValue(this);'> -->
+                                                        <label class="form-label">10, Ogunbiyi Street Iwaya Yaba Lagos</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> 
+                                </div>
+
+                                <div class="row clearfix" style="">
+                                    <div class="col-sm-4">
+                                            <div class="form-group">
+                                                    <p><b>NAME OF REFEREE</b></p>
+                                                    <div class="form-group form-float">
+                                                            <div class="form-line">
+                                                                {{form.referee_name1}}
+                                                                <!-- <input type="text" class="form-control" name="referee_name1" id="referee1" onkeyup='saveValue(this);'> -->
+                                                                <label class="form-label">Ajayi Tolani Ogungbe</label>
+                                                            </div>
+                                                    </div>
+                                            </div>
+                                        </div>
+        
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <p><b>ADDRESS OF REFEREE</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    {{form.referee_address1}}
+                                                    <!-- <input type="text" class="form-control" name="referee_address1" id="referee_address1" onkeyup='saveValue(this);'> -->
+                                                    <label class="form-label">24 Abule-Egba Street Yaba Lagos</label> </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+        
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                <p><b>PHONE NUMBER OF REFEREE</b></p>
+                                                <div class="form-group form-float">
+                                                    <div class="form-line">
+                                                        {{form.referee_phone1}}
+                                                        <!-- <input type="text" class="form-control" name="referee_phone1" id="referee_phone1" onkeyup='saveValue(this);'> -->
+                                                        <label class="form-label">+234 87668892 </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+
+                                
+                                <div class="row clearfix" style="">
+                                    <div class="col-sm-4">
+                                            <div class="form-group">
+                                                    <p><b>NAME OF REFEREE</b></p>
+                                                    <div class="form-group form-float">
+                                                            <div class="form-line">
+                                                                {{form.referee_name2}}
+                                                                <!-- <input type="text" class="form-control" name="referee_name2" id="referee2" onkeyup='saveValue(this);'> -->
+                                                                <label class="form-label">Seun Ayomide Olami</label>
+                                                            </div>
+                                                    </div>
+                                            </div>
+                                        </div>
+        
+                                    <div class="col-sm-4">
+                                        <div class="form-group">
+                                            <p><b>ADDRESS OF REFEREE</b></p>
+                                            <div class="form-group form-float">
+                                                <div class="form-line">
+                                                    {{form.referee_address2}}
+                                                    <!-- <input type="text" class="form-control" name="referee_address2" id="referee_address2" onkeyup='saveValue(this);'> -->
+                                                    <label class="form-label">32 Mc-neil Street Yaba Lagos</label> </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+        
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                <p><b>PHONE NUMBER OF REFEREE</b></p>
+                                                <div class="form-group form-float">
+                                                    <div class="form-line">
+                                                        {{form.referee_phone2}}
+                                                        <!-- <input type="text" class="form-control" name="referee_phone2" id="referee_phone2" onkeyup='saveValue(this);'> -->
+                                                        <label class="form-label">+234 786 868993 </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+
+                                <div class="row clearfix" style="">
+                                    <div class="col-sm-4">
+                                            <div class="form-group">
+                                                        <p><b>Upload Marriage Certificate(optional):</b></p>
+                                                        <div class="form-group form-float">
+                                                            <div class="drag-icon-cph">
+                                                                <i class="material-icons">touch_app</i>
+                                                            </div>
+                                                            <div class="fallback">
+                                                                <!-- {{form.marriage_cert}} -->
+                                                                {% if form.instance.marriage_cert %}
+                                                                   <b>File Chosed: {{form.instance.marriage_cert}}</b> 
+                                                                        <input name="marriage_cert" type="file" value="form.instance.marriage_cert" />
+                                                                {% else %}
+                                                                    <input name="marriage_cert" type="file" value="form.instance.marriage_cert" />
+                                                               {% endif %}
+                                                            </div>  
+                                                        </div>
+                                                   
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                <p><b>Upload first O'level Result (required)</b></p>
+                                                <div class="form-group form-float">
+                                                    <div class="drag-icon-cph">
+                                                        <i class="material-icons">touch_app</i>
+                                                    </div>
+                                                    <div class="fallback">
+                                                        {% if form.instance.o_level_cert1 %}
+                                                                   <b>File Chosed: {{form.instance.o_level_cert1}}</b> 
+                                                                        <input name="o_level_cert1" type="file" value="form.instance.o_level_cert1" />
+                                                                     {% else %}
+                                                                        <input name="o_level_cert1" type="file" value="form.instance.o_level_cert1" />
+                                                                {% endif %}
+                                                    </div>  
+                                                </div>
+                                            </div>
+                                        </div>
+        
+                                        <div class="col-sm-4">
+                                            <div class="form-group">
+                                                <p><b>Upload first O'level Result (optional)</b></p>
+                                                <div class="form-group form-float">
+                                                    <div class="drag-icon-cph">
+                                                        <i class="material-icons">touch_app</i>
+                                                    </div>
+                                                    <div class="fallback">
+                                                        {% if form.instance.o_level_cert2 %}
+                                                                   <b>File Chosed: {{form.instance.o_level_cert2}}</b> 
+                                                                        <input name="o_level_cert2" type="file" value="form.instance.o_level_cert2" />
+                                                                    {% else %}
+                                                                    <input name="o_level_cert2" type="file" value="form.instance.o_level_cert2" />
+                                                                {% endif %}
+                                                    </div>  
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+
+                         
+                        </section>
+                          
+                    <!--End of Office Details-->
+                    
+                    
+        <section class="content">
+            <div class="container-fluid" style="margin-top: -10%">
+                <div class="row clearfix">
+                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                        <div class="card">
+                            <div class="header">
+                                <h2>
+                                   <b>O'LEVEL RESULT</b>
+                                </h2>
+                                
+                            </div>
+                            <div class="body">
+                               <div class="row clearfix">
+                                    <div class="col-sm-6">
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <p><b>EXAMINATION NUMBER</b></p>
+                                                {{form.examination_number1}}
+                                                <!-- <input type="text" name="examination_number1" class="form-control" placeholder="Ex: 4251509247" /> -->
+                                            </div>
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <div class="form-line"><br>
+                                                <p><b>NUMBER OF SITTINGS</b></p>
+                                                {{form.exam_sitting}}
+                                                <!-- <select class="form-control show-tick" name="exam_sitting">
+                                                    <option value="1">1</option>
+                                                    <option value="2" name="o_level_1">2</option> 
+                                                </select> -->
+                                                </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <p><b>EXAMINATION TYPE</b></p>
+                                                    <!-- <input type="text" name="examination_type1" class="form-control" placeholder="GCE" /> -->
+                                                    {{form.examination_type1}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <p><b>EXAMINATION YEAR</b></p>
+                                                    {{form.examination_year1}}
+                                                    <!-- <input type="number" name="examination_year1" class="form-control" placeholder="Ex: 2012" /> -->
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <p><b>SUBJECTS</b></p>
+                                                <div class="form-line">
+                                                <select class="form-control disable" name="sub1">
+                                                    <option value="Mathematics" >Mathematics</option>
+                                                
+                                                </select>
+</div>
+                                            </div>
+                                    </div>
+                                    
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <p><b>GRADES</b></p>
+                                                     {{form.grade1}}
+                                                    <!-- <input type="text" name="grade1" class="form-control" placeholder="A1" /> -->
+                                                    
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                   <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <select class="form-control disable"  name="sub2">
+                                                        <option value="English">English</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <!-- <input type="text" name="grade2" class="form-control" placeholder="A1" /> -->
+                                                    {{form.grade2}}
+                                                </div>
+                                            </div>
+                                    </div>
+                                  
+                                <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.sub3}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.grade3}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                     <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.sub4}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.grade4}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                     <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.sub5}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.grade5}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                     <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.sub6}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                   {{form.grade6}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                     <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.sub7}}
+                                                  
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                   {{form.grade7}}
+                                                  
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                  </div>
+                            </div>
+                        </div>
+                    </div>
+              
+                    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12">
+                        <div class="card">
+                            <div class="header">
+                                <h2>
+                                   <b>O'LEVEL RESULT</b>
+                                </h2>
+                            
+                            </div>
+                            <div class="body">
+                               <div class="row clearfix">
+                                    <div class="col-sm-12">
+                                        <div class="form-group">
+                                            <div class="form-line">
+                                                <p><b>EXAMINATION NUMBER</b></p>
+                                                {{form.examination_number2}}
+                                              </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <p><b>EXAMINATION TYPE</b></p>
+                                                    {{form.examination_type2}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <p><b>EXAMINATION YEAR</b></p>
+                                                    {{form.examination_year2}}
+                                                    <!-- <input type="number" name="examination_year2" class="form-control" placeholder="Ex: 2012" /> -->
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <p><b>SUBJECTS</b></p>
+                                                <div class="form-line">
+                                                    <select class="form-control disable" name="sub1_2">
+                                                        <option value="Mathematics" >Mathematics</option>
+                                                    
+                                                    </select>
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <p><b>GRADES</b></p>
+                                                     {{form.grade1_2}}
+                                                    
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                   <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    <select class="form-control disable"  name="sub2_2">
+                                                    <option value="English">English</option>
+                                                
+                                                    </select>
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.grade2_2}}
+                                                    
+                                                </div>
+                                            </div>
+                                    </div>
+                                  
+                                <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.sub3_2}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.grade3_2}}
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                     <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.sub4_2}}
+                                                  
+                                                </div>
+                                            </div>  
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.grade4_2}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                     <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.sub5_2}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.grade5_2}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                     <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.sub6_2}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.grade6_2}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                     <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.sub7_2}}
+                                                    
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div class="col-sm-6">
+                                            <div class="form-group">
+                                                <div class="form-line">
+                                                    {{form.grade7_2}}
+                                                   
+                                                </div>
+                                            </div>
+                                    </div>
+                                    
+                                  </div>
+                            </div>
+                        </div>
+                    </div>
+    </section>
+    <!--End Of Education Qualifications-->  
+
+
+        <section class="content">
+                <div class="container-fluid">
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="margin-top: -10%">
+                                <div class="button-demo">
+                                        <button type="submit" class="btn btn-block btn-lg btn-success waves-effect"><h5>SAVE INDEX</h5></button>
+                                </div>
+                                </div>
+                                </div>
+                                </section>
+   </form>
+
+        <!-- <!-- <script src="https//code.jquery.com/jquery-3.3.1.min.js"></script> --> -->
+   <script>
+       $("id_country").change(function () {
+           console.log("asdfghjkhgfdf")
+       })
+    </script>
+
+        <script>
+             function readFIle(input) {
+                    if (input.files && input.files[0]) {
+                        var reader = new FileReader();
+
+                        reader.onload = function (e) {
+                            $('#ShowImage')
+                                .attr('src', e.target.result);
+                        };
+
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                }
+        </script>
+
+
+
+{% endblock %}

@@ -1,0 +1,14 @@
+from django.shortcuts import render
+from email_marketing import urls
+from django.http import HttpResponse
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+
+# Create your views here.
+def push_emails(request):
+    if 'mailMarketing/push_mail'in request.path:
+        html_content = render_to_string("email_marketing/email_content.html")
+        email = EmailMessage("Great deals on all engineering equipments", html_content, "info@caravellesystems.com", ['samso9ite@gmail.com', 'info@caravellesystems.com', 'info@total.com.ng', ])
+        email.content_subtype = "html"
+        res = email.send()
+        return HttpResponse("Sent Successfully")

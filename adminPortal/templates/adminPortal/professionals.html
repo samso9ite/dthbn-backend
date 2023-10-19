@@ -1,0 +1,478 @@
+{% extends 'adminPortal/base.html' %}
+{% load static %}
+{% block body %}      
+    <section class="content">
+        <div class="container-fluid">
+            
+            <div class="row clearfix">
+                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                    <div class="card">
+                        <div class="header">
+                            <h2>
+                                Professional 
+                            </h2>
+                        </div>              
+            </div>
+
+        <div class="row clearfix">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                <div class="card">
+                    <div class="header">             
+                        <h2>
+                            PROFESSIONALS RECORD
+                            <span style="float: right;"><a href="">
+                                <button type="submit" class="btn bg-red waves-effect" value="Export All professional Details"
+                                 name="export">Export All Professional professionals</button></a></span>
+
+                      </h2>
+                    
+                    </div>
+                    <div class="body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped table-hover  js-exportable" id="search_ta">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Reg Number</th>
+                                        <th>Cadre</th>
+                                        <th>Phone Number</th>
+                                        <th>Email</th>
+                                        <th> Licence Due Date</th>    
+                                        <th>View</th> 
+                                        {% if request.user.is_admin %}
+                                        <th>Action</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tfoot>
+                                    <tr>
+                                        
+                                        <th> Name</th>
+                                        <th> Reg Number</th>
+                                         <th> Cadre</th>
+                                        <th> Phone Number</th>
+                                        <th> Email</th>
+                                        <th> Licence Due Date</th>    
+                                        <th> View</th> 
+                                        {% if request.user.is_admin %}
+                                        <th> Action</th>
+                                        {% endif %}
+                                    </tr>
+                                </tfoot>
+                                <tbody>
+                                   
+                                        {% if all_professional_records %}
+                                        
+                                        {% for each_professional in all_professional_records %}
+                                        
+                                    <tr>
+                                            <td> {{each_professional.first_name|title}} {{each_professional.last_name|title}}</td>
+                                            <td> {{each_professional.profuser.code}}</td>
+                                            <td> {{each_professional.profuser.programme|title }}</td>
+                                            <td>{{each_professional.profuser.phone_number}}</td>
+                                            <td>{{each_professional.profuser.email|lower}}</td>
+                                            <td>{{each_professional.profuser.professional.licence_due|lower}}</td>
+                                            <td><a href="#"><i class="material-icons" data-toggle="modal" data-target="#largeModal{{each_professional.id}}">visibility</i></a>
+                                        
+                                                    <div class="modal fade" id="largeModal{{each_professional.id}}" tabindex="-1" role="dialog">
+                                                        <div class="modal-dialog modal-lg" role="document">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <div class="image" style="text-align: center">
+                                                                        {% if each_professional.profile_image %}
+                                                                            <img src="{{each_professional.profile_image.url}}" width="110" height="110" alt="User" style="border: 4px solid #efefef; border-radius: 100%"/>
+                                                                        {% elif each_professional.profile_image is none %}
+                                                                            <img src="{% static 'general/images/user.png' %}" width="110" height="110" alt="User" style="border: 4px solid #efefef; border-radius: 100%"/>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-body"> 
+                                                                        <div class="row clearfix">
+                                                                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                                <div class="card">
+                                                                                    <div class="header">
+                                                                                        <h4 style="align:center;">
+                                                                                        <b> PROFESSIONAL DETAILS </b>
+                                                                                        <span style="float: right; margin-right: 5%"><b>REGISTRATION NUMBER: {{each_professional.profuser.code}} </b> </span>
+                                                                                            <!-- <small>Use <code>.table-striped</code> to add zebra-striping to any table row within the <code>&lt;tbody&gt;</code></small> -->
+                                                                                        </h4>
+                                                                                        
+                                                                                        <ul class="header-dropdown m-r--5">
+                                                                                        
+                                                                                            <li class="dropdown">
+                                                                                                <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                                                                                    <i class="material-icons">more_vert</i>
+                                                                                                </a>
+                                                                                                <ul class="dropdown-menu pull-right">
+                                                                                               
+                                                                                                </ul>
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+                                                                    
+                                                                <div class="body table-responsive">
+                                                                    <table class="table table-striped">
+                                                                      <tbody>
+                                                                            <tr>
+                                                                                <td><b>Employment Status:</b>  {{each_professional.employment_status}}</td>
+                                                                                <td><b>Present Position:</b>  {{each_professional.position}}</td>
+                                                                                <td><b>Department:</b>  {{each_professional.department}}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><b>Office Name:</b> {{each_professional.office_name}}</td>
+                                                                                <td><b>Office Address:</b>  {{each_professional.office_address}}</td>
+                                                                                <td><b>Sector:</b> {{each_professional.sector}}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><b>Office Country:</b>  {{each_professional.office_country}}</td>
+                                                                                <td><b>Office State:</b>  {{each_professional.office_state}}</td>
+                                                                                <td><b>Office LGA:</b> {{each_professional.office_lga}}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td><b>Office Phone:</b>+ {{each_professional.office_phone}}</td>
+                                                                                <td><b>Office Email: </b> {{each_professional.office_email}}</td>
+                                                                                <td><b>Category: </b> {{each_professional.profuser.programme}}</td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row clearfix">
+                                                            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                <div class="card">
+                                                                    <div class="header">
+                                                                        <h2 style="align:center">
+                                                                          <b>PERSONAL DETAILS</b>
+                                                                        </h2>
+                                                                        <ul class="header-dropdown m-r--5">
+                                                                            <li class="dropdown">
+                                                                                <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                                                                    <i class="material-icons">more_vert</i>
+                                                                                </a>
+                                                                                <ul class="dropdown-menu pull-right">
+                                                                                    <li><a href="javascript:void(0);">Action</a></li>
+                                                                                    <!--<li><a href="javascript:void(0);">Edit</a></li>-->
+                                                                              <li><a href="">Delete</a></li>
+                                                                                </ul>
+                                                                            </li>
+                                                                        </ul>
+                                                                    </div>
+                                                                    <div class="body table-responsive">
+                                                                        <table class="table table-striped">
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                <tr>
+                                                                                    <td><b>First Name:</b>  {{each_professional.first_name}}</td>
+                                                                                    <td><b>Middle Name: </b>  {{each_professional.middle_name}}</td>
+                                                                                    <td><b>Last Name: </b>  {{each_professional.professional.last_name}}</td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td><b>Gender: </b>  {{each_professional.gender}}</td>
+                                                                                    <td><b>Title: </b>  {{each_professional.title}}</td>
+                                                                                    <td><b>Marital Status: </b>  {{each_professional.marital_status}} </td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td><b>Maiden Name: </b>  {{each_professional.maiden_name}}</td>
+                                                                                    <td><b>Phone No: </b>  {{each_professional.phone}}</td>
+                                                                                    <td><b>Email: </b> {{each_professional.email}}</td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td><b>Postal Address: </b> {{each_professional.postal_address}}</td>
+                                                                                    <td><b>Residential Country: </b>  {{each_professional.residential_country}}</td>
+                                                                                    <td><b>Residential State: </b>  {{each_professional.residential_state}}</td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                    <td><b>Residential Address: </b>{{each_professional.residential_address}} </td>
+                                                                                    <td><b>Residential LGA: </b> {{each_professional.residential_lga}}</td>
+                                                                                    <td><b>State Of Origin: </b> {{each_professional.state_of_origin}}</td>
+                                                                                </tr>
+                                                                                <tr>
+                                                                                        <td><b>LGA: </b> {{each_professional.lga}}</td>
+                                                                                        <td><b>Senatorial District: </b> {{each_professional.senetorial_district}}</td>
+                                                                                        <td><b>Date Of Birth: </b> {{each_professional.date_of_birth}}</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <td><b>State Of Birth: </b> {{each_professional.state_of_birth}}</td>
+                                                                                        <td><b>LGA Of Birth : </b> {{each_professional.lga_of_birth}}</td>
+                                                                                    </tr>
+                                                                             </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row clearfix">
+                                                                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                    <div class="card">
+                                                                        <div class="header">
+                                                                            <h2 style="align:center">
+                                                                              <b>EDUCATION QUALIFICATIONS WITH DATES</b>
+                                                                            </h2>
+                                                                            <ul class="header-dropdown m-r--5">
+                                                                                <li class="dropdown">
+                                                                                    <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                                                                        <i class="material-icons">more_vert</i>
+                                                                                    </a>
+                                                                                    <ul class="dropdown-menu pull-right">
+                                                                                        <li><a href="javascript:void(0);">Action</a></li>
+                                                                                        <!--<li><a href="javascript:void(0);">Edit</a></li>-->
+                                                                                          <li><a href="">Delete</a></li>li>
+                                                                                    </ul>
+                                                                                </li>
+                                                                            </ul>
+                                                                        </div>
+                                                                        <ul class="list-group">
+                                                                                <li class="list-group-item">{{each_professional.qualification1}}</li>
+                                                                                <li class="list-group-item">{{each_professional.qualification2}}</li></li>
+                                                                                <li class="list-group-item">{{each_professional.qualification3}}</li>
+                                                                                <li class="list-group-item">{{each_professional.qualification4}}</li>
+                                                                             
+                                                                            </ul>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="row clearfix">
+                                                                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                            <div class="card">
+                                                                                <div class="header">
+                                                                                    <h2 style="align:center">
+                                                                                      <b>PROFESSIONAL QUALIFICATIONS WITH DATES</b>
+                                                                                    </h2>
+                                                                                    <ul class="header-dropdown m-r--5">
+                                                                                        <li class="dropdown">
+                                                                                            <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                                                                                <i class="material-icons">more_vert</i>
+                                                                                            </a>
+                                                                                            <ul class="dropdown-menu pull-right">
+                                                                                                <li><a href="javascript:void(0);">Action</a></li>
+                                                                                                <!--<li><a href="javascript:void(0);">Edit</a></li>-->
+                                                                                                  <li><a href="">Delete</a></li>
+
+                                                                                                  <li>
+                                                                                                    <a href="#"><i class="material-icons" data-toggle="modal" data-target="#resetLimit">autorenew</i>  Delete                                    
+                                                                                                        <div class="modal fade" id="resetLimit" tabindex="-1" role="dialog">
+                                                                                                            <div class="modal-dialog" role="document">
+                                                                                                                <div class="modal-content">
+                                                                                                                        <div class="modal-header">
+                                                                                                                            <div class="image" style="text-align: center">
+                                                                                                                            <img src="{% static 'general/images/default_avtar.jpg' %}" width="112" height="112" alt="User" style="border: 8px solid #efefef; border-radius: 100%"/>
+                                                                                                                                    
+                                                                                                                            </div>
+                                                                                                                        </div>
+                                                                                                                        <div class="modal-body"> 
+                                                                                                                                <div class="row clearfix">
+                                                                                                                                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                                                                                        <div class="card">
+                                                                                                                                            <div class="header">
+                                                                                                                                                <h5 style="align:center;">
+                                                                                                                                                <b> School Name: </b>
+                                                                                                                                                </h5>
+                                                                                                                                            </div>
+                                                                                                                            
+                                                                                                                                    <div class="body table-responsive">
+                                                                                                                                        <table class="table table-striped">
+                                                                                                                                            <tbody>
+                                                                                                                                                <tr>
+                                                                                                                                                    <td><b>Set Limit</b>
+                                                                                                                                                        <div class="form-group form-float" style="margin-top:5%">
+                                                                                                                                                            <div class="form-line" style="text-align:center;" >
+                                                                                                                                                                <form action="" method="post">
+                                                                                                                                                                    {% csrf_token %}
+                                                                                                                                                                    <input type="number" name="index_quota_limit" class="form-control">
+                                                                                                                                                                    <input type="number" name="id" style="display:none;" value="" />
+                                                                                                                                                                    <label class="form-label">Click to enter limit for school</label>
+                                                                                                                                                                    
+                                                                                                                                                                    <button class="btn btn-primary btn-lg" style="margin-top:20px;margin-bottom:20px;"  name="reset" type="submit">RESET</button>
+                                                                                                                                                                </form>
+                                                                                                                                                            </div>
+                                                                                                                                                        </div>
+                                                                                                                                                    </td>
+                                                                                                                                                </tr>
+                                                                                                                                            </tbody>
+                                                                                                                                        </table>
+                                                                                                                                        
+                                                                                                                                    </div>
+                                                                                                                                </div>
+                                                                                                                            </div>
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                </div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        </a>
+                                                                                                    </li>
+                                                                                            </ul>
+                                                                                        </li>
+                                                                                    </ul>
+                                                                                </div>
+                                                                                <ul class="list-group">
+                                                                                        <li class="list-group-item">{{each_professional.prof_qualification1}}</li>
+                                                                                        <li class="list-group-item">{{each_professional.prof_qualification2}}</li>
+                                                                                        <li class="list-group-item">{{each_professional.prof_qualification3}}</li>
+                                                                                        <li class="list-group-item">{{each_professional.prof_qualification4}}</li>
+                                                                                        
+                                                                                    </ul>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                            
+                                                            
+                                                    </div>
+                                                            </div>
+                                                       
+                                                                    <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-link waves-effect" data-dismiss="modal">CLOSE</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                                                        
+                                                                                        </td>
+                                                                                        {% if request.user.is_admin %}
+                                                                                        <td> 
+                                                                                    <ul>
+                                                                    <li class="dropdown" style="list-style:none;">
+                                                                        <a href="javascript:void(0);" class="dropdown-toggle"style="padding-left:-10px" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                                                                            <i class="material-icons">more_vert</i>
+                                                                        </a>
+                                                                        <ul class="dropdown-menu pull-right">
+                                                                            <li><a href="{% url 'adminPortal:del_professionals' id=each_professional.id %}">Delete</a></li>
+                                                                            <li>
+                                                                                <a href="#"><i class="material-icons" data-toggle="modal" data-target="#resetLimit">autorenew</i>
+                                            
+                                                                                    <div class="modal fade" id="resetLimit" tabindex="-1" role="dialog">
+                                                            <div class="modal-dialog" role="document">
+                                                                <div class="modal-content">
+                                                                        <div class="modal-header">
+                                                                            <div class="image" style="text-align: center">
+                                                                              <?php 
+                                                                      if($professional->image){
+                                                                          ?>
+                                                                         <img src="<?php echo base_url('uploads/images/professional/'.$professional->image); ?>" width="112" height="112" alt="User" style="border: 8px solid #efefef; border-radius: 100%"/>
+                                                            
+                                                                         <?php  
+                                                                      }else{
+                                                                      
+                                                                      echo '<img src="images/default_avtar.jpg" width="112" height="112" alt="User" style="border: 8px solid #efefef; border-radius: 100%"/>';
+                                                                      }
+                                                                      ?>       
+                                                                            </div>
+                                                                        </div>
+                                                                        <div class="modal-body"> 
+                                                                                <div class="row clearfix">
+                                                                                <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                                                                                        <div class="card">
+                                                                                            <div class="header">
+                                                                                                <h5 style="align:center;">
+                                                                                                 <b> Name: <?php $professional->title.' '.$professional->first_name.' '.$professional->last_name; ?> </b>
+                                                                                                
+                                                                                                </h5>
+                                                                                              </div>
+                                                                            
+                                                                                        <div class="body table-responsive">
+                                                                                            <table class="table table-striped">
+                                                                                              <tbody>
+                                                                                                    <tr>
+                                                                                                        <td><b>Reset Due Date</b>
+                                                                                                        <div class="form-group form-float" style="margin-top:5%">
+                                                                                                            <div class="form-line">
+                                                                                                               <form action="#" method="post">
+                                                                                                        <input type="text" name="limit" class="form-control">
+                                                                                                        <input type="number" name="id" style="display:none;" value=">" />
+                                                                                                        <label class="form-label">2019-06-11</label>
+                                                                                                        
+                                                                                                        <Button class="btn btn-primary btn-lg" style="margin-top:20px;margin-bottom:20px;"  name="reset" type="submit">RESET</Button>
+                                                                                                        </form>
+                                                                                                            </div>
+                                                                                                        </div></td>
+                                                                                                        {% endif %}
+                                                                                                    </tr>
+                                                                                                   
+                                                                                                    
+                                                                                                </tbody>
+                                                                                            </table>
+                                                                                        </div>
+                                                                                </div>
+                                                                               
+                                                        </div>
+                                                        </div>
+                                                        </div>
+                                                        </div>
+                                                        </div>
+                                                        </div>
+                                                        </div>
+                                                        </div>
+                                                        
+                                                    </div></a>
+                                                                            </li> 
+                                                                        </ul>
+                                                                    </li>
+                                                                </li>>
+                                                                </ul>
+                                                            </td>
+                   
+                                        
+                                    </tr>
+                                    {% endfor %}
+                                    {% endif %} 
+                                
+                                </tbody>
+                            </table>
+
+                                 <!-- Professional Paginator -->
+        {% if all_professional_records.has_other_pages %}
+            <nav aria-label="all_professional_records Pagination" class="mb-4">
+                <ul class="pagination">
+                    {% if all_professional_records.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ all_professional_records.previous_page_number }}">Previous</a>
+                        </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                    {% endif %}
+
+                    {% for page_num in all_professional_records.paginator.page_range %}
+                        {% if all_professional_records.number == page_num %}
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    {{page_num}}
+                                    <span class="sr-only">(current)</span>
+                                </span>
+                            </li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if all_professional_records.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{all_professional_records.next_page_number}}">Next</a>
+                            </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">Next</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        
+
+        
+        <!-- #END# Exportable Table -->
+    </section>
+
+   {% endblock %}

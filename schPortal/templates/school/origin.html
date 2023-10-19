@@ -1,0 +1,4 @@
+<option value="">Select an option</option>
+{% for localGov in lga %}
+    <option value="{{localGov.pk}}">{{localGov.local_gov_area}}</option>
+{% endfor %}

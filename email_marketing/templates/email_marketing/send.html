@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">		
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+       </head>
+<body>
+<br>
+<h3> Caravelle Sytems Email Marketing</h3>
+<h5> Please type the email you are sending email to and press the submit button </h5>  
+<form method="POST" action="{% url 'mailMarketing:send_mail' %}">
+{% csrf_token %}
+<textarea id="w3review" name="all_emails" rows="4" cols="50"></textarea>
+<input type="submit">
+</form>
+</body>
+</html>
