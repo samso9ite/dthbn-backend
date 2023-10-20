@@ -22,6 +22,14 @@ from django.template.defaulttags import register
 from django_xhtml2pdf.utils import generate_pdf
 from django_xhtml2pdf.views import PdfMixin
 
+# API's import 
+from rest_framework.generics import CreateAPIView
+from .serializers import *
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+
 
 class Pdf(View):
     def get(self, request, *args, **kwargs):
@@ -40,24 +48,28 @@ class Pdf(View):
             return Render.render('school/exam_pdf.html', context_dict)
 
 
-class SchoolProfile(LoginRequiredMixin,CreateView):
-    model = School
-    form_class = schUpdateForm
-    success_url = reverse_lazy('schoolPortal:dashboard')
-    template_name = 'school/schools_account_update.html'
+class SchoolProfile(CreateAPIView):
+    try:
+        queryset = School.objects.all()
+        serializer_class = schUpdateSerializer
+        permission_classes = [IsAuthenticated]
+
+        def perform_create(self, serializer):
+            user = self.request.user
+            # form.instance.User = user
+            try:
+                user = User.objects.get(id=user.id)
+                user.profile_update = True
+                user.save()
+                return Response({"message": "Profile Updated Successfully"}, status= status.HTTP_200_OK)
+            except user.DoesNotExist:
+                return Response({"message": "User doesn't exist"}, status= status.HTTP_400_BAD_REQUEST)
+            # return super().form_valid(form)
     
-    def form_valid(self, form):
-        user = self.request.user
-        form.instance.User = user
-        try:
-            user = User.objects.get(id=user.id)
-            user.profile_update = True
-            user.save()
-            sweetify.success(self.request, 'Profile Updated Successfully', button='Great!')
-        except user.DoesNotExist:
-            sweetify.error(self.request, 'User Doesn\'t Exist', button='Great!')
-        return super().form_valid(form)
-       
+    except Exception as e:
+        print(e)
+        raise e
+        
        
 def load_cities(request):
     country_id = request.GET.get('residential_country')
@@ -92,7 +104,7 @@ def load_state_origin(request):
     return render(request, 'school/origin.html', {'lga': lga} )
 
 
-@login_required
+@api_view(['GET'])
 def Dashboard(request):
     user = request.user
     school_data = ''
@@ -110,11 +122,11 @@ def Dashboard(request):
                 'total_indexed': total_indexed,
                 'notification' : notification,
             }
-            return render(request, "school/Dashboard.html", context)
-        else:
-           return render(request, "school/Dashboard.html")
+            return Response({"data": context}, status=status.HTTP_200_OK)
+        # else:
+        #    return Response({"message":"Profil not updated"}, stat)
     else:
-        return HttpResponseRedirect(reverse("Auth:Register"))
+        return Response({"message":"User isn't a school"}, status=status.HTTP_400_BAD_REQUEST)
 
 @login_required
 def AccountUpdate(request, User):

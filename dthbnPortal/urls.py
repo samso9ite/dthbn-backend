@@ -22,7 +22,7 @@ from django.conf import settings
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v2/auth/', include('authentication.urls')),
-    path('school/', include('schPortal.urls')),
+    path('api/v2/school/', include('schPortal.urls')),
     url('/', include('django.contrib.auth.urls')),
     path('professional/', include('profPortal.urls')),
     path('admin/', include('adminPortal.urls')),
