@@ -19,11 +19,13 @@ from django.urls import reverse
 import sweetify
 from django.db.models import Q
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from authentication.serializers import *
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.tokens import default_token_generator
+from rest_framework.permissions import IsAuthenticated
 
 @api_view(['POST'])
 def sign_up_view(request):
@@ -141,34 +143,84 @@ def logout_view(request):
         # Use the logout function to log the user out
         logout(request)
         return Response({"message": "Logged out successfully"}, status=status.HTTP_200_OK)
+    
+@api_view(['POST'])
+def forgot_password(request):
+    if request.method == 'POST':
+        serializer = forgotPasswordSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Response({"message": "User Not Found"}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Generate password reset token
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.id))
+            current_site = get_current_site(request)
+            print(current_site)
+            subject = 'Account Password Reset Link'
+            message = render_to_string('auth/password_reset_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': uid,
+                'token': token,
+            })
+            user.email_user(subject, message, "noreply@dthbn.gov.ng")
+            return Response({"message": "Password reset email sent"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@login_required
+@api_view(['POST'])
+def reset_password(request,  uidb64, token):
+    if request.method == 'POST':
+        serializer = passwordResetSerializer(data=request.data)
+        if serializer.is_valid():
+            try: 
+                uid = urlsafe_base64_decode(uidb64).decode()
+                user = User.objects.get(pk=uid)
+            except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+                user = None
+             # Check if the user exists and the token is valid
+            if user is not None and default_token_generator.check_token(user, token):
+                new_password = serializer.validated_data['new_password']
+                confirm_password = serializer.validated_data['confirm_password']
+
+                if new_password == confirm_password:
+                    user.set_password(new_password)
+                    user.save()
+                    return Response({"message": "Password reset successfully"}, status=status.HTTP_200_OK)
+                else:
+                    return Response({"message": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({"message": "Invalid reset link"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def change_password_view(request):
     if request.method == 'POST':
-        form = PasswordChangeForm(request.user, request.POST)
-        if form.is_valid():
-            user = form.save()
-            update_session_auth_hash(request, user)
-            sweetify.success(request, 'Password Changed Successfully')
-                
-            if user.is_school:
-                return HttpResponseRedirect(reverse("schoolPortal:dashboard"))
-            elif user.is_professional:
-                return HttpResponseRedirect(reverse("profPortal:dashboard"))
+        serializer = passwordResetSerializer(data=request.data)
+        if serializer.is_valid():
+            new_password = serializer.validated_data['new_password']
+            confirm_password = serializer.validated_data['confirm_password']
+            user = request.user
+            if new_password == confirm_password:
+                user.set_password(new_password)
+                user.save()
+                return Response({"message": "Password reset successfully"}, status=status.HTTP_200_OK)
             else:
-                return HttpResponseRedirect(reverse("adminPortal:dashboard"))
-       
-    else:
-        form = PasswordChangeForm(request.user)
-    if request.user.is_school:
-        return render(request, 'school/change_password.html', {"form":form})
-    else:
-        return render(request, 'adminPortal/change_password.html', {'form':form})
+                return Response({"message": "Passwords do not match"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"message": "Invalid reset link"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@login_required
+@permission_classes([IsAuthenticated])
 def block(request, id):
     try:
-        user_instance = User.objects.get(id=id).update(block=True)
+        User.objects.get(id=id).update(block=True)
     except User.DoesNotExist:
-        print("User Does Not Exist")
-    return render(request, 'adminPortal/accredited.html')
+        return Response({"message":"User Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"message":"User blocked successfully"}, status=status.HTTP_200_OK)
+
