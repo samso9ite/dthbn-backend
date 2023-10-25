@@ -16,7 +16,6 @@ from schPortal import urls
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.urls import reverse
-import sweetify
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -27,19 +26,24 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework.permissions import IsAuthenticated
 
+from rest_framework.authtoken.models import Token
+from rest_framework.views import APIView
+from rest_framework.authentication import TokenAuthentication
+from django.contrib.auth import authenticate
+
 @api_view(['POST'])
 def sign_up_view(request):
     serializer = userSerializer(data=request.data)
     if request.method == 'POST':
         if serializer.is_valid():
-            is_professional = serializer.validated_data['is_professional']
-            if is_professional:
+            if serializer.validated_data['is_professional']:
+            # is_professional = serializer.validated_data['is_professional']
+            # if is_professional:
                 programme = serializer.validated_data['programme']
                 codeVar = serializer.validated_data['code']
                 code = ''
                 if programme == 'Dental Therapist':
                     code = 'RDTH' + codeVar
-                    print(code)
                 elif programme == 'Dental Nurses':
                     code = 'RDSN' + codeVar
                 elif programme == 'Dental Surgery Assistant':
@@ -47,10 +51,16 @@ def sign_up_view(request):
                 elif programme == 'Dental Surgery Technician':
                     code = 'RDST' + codeVar
                 username = code
+            password = serializer.validated_data['password']
+            if serializer.validated_data['is_professional']:
+                user = serializer.save(code=code, is_active=False, username=username)
+            else:
+               user = serializer.save(is_active=False) 
+            user.set_password(password)
+            user.save()
+
             current_site = get_current_site(request)
             subject = 'Account Activation Link'
-            user = serializer.save(code=code, is_active=False, username=username,)
-            print(user)
             message = render_to_string('auth/account_activation_email.html', {
                 'user': user,
                 'domain': current_site.domain,
@@ -58,53 +68,85 @@ def sign_up_view(request):
                 'token': account_activation_token.make_token(user),
             })
             user.email_user(subject, message)
-            return Response({"message": "User created successfully", 'data':serializer.data}, status=status.HTTP_201_CREATED, )
+            return Response({"message": "User created successfully", 'data':serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['POST'])
-def login_view(request):
-    if request.method == 'POST':
+# @api_view(['POST'])
+# def login_view(request):
+#     if request.method == 'POST':
+#         serializer = loginSerializer(data=request.data)
+#         if serializer.is_valid():
+#             email = serializer.validated_data['email']
+#             password = serializer.validated_data['password']
+            
+#             try:
+#                 # Attempt to get the user by email
+#                 user = User.objects.get(email=email)
+#             except User.DoesNotExist:
+#                 # Handle the case where the user does not exist
+#                 return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+#             # Authenticate the user
+#             user = authenticate(username=user.username, password=password)
+            
+#             if user:
+#                 if user.is_active:
+#                     if not user.suspend and not user.block:
+#                         # Login the user
+#                         login(request, user)
+#                         refresh = RefreshToken.for_user(user)
+#                         data = {
+#                             'refresh' : str(refresh),
+#                             'access' : str(refresh.access_token)
+#                         }
+#                         return Response(data, status=status.HTTP_200_OK)
+#                     elif user.suspend:
+#                         return Response({"message": "School Has Been Suspended"}, status=status.HTTP_400_BAD_REQUEST)
+#                     elif user.block:
+#                         return Response({"message": "School Has Been Blocked"}, status=status.HTTP_400_BAD_REQUEST)
+#                 else:
+#                     return Response({"message": "User is not active"}, status=status.HTTP_400_BAD_REQUEST)
+#             else:
+#                 return Response({"message": "Invalid Username or Password"}, status=status.HTTP_401_UNAUTHORIZED)
+#         else:
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class login_view(APIView):
+    authentication_classes = (TokenAuthentication,)  # Apply TokenAuthentication for this view
+
+    def post(self, request):
         serializer = loginSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data['email']
             password = serializer.validated_data['password']
-            
             try:
                 # Attempt to get the user by email
                 user = User.objects.get(email=email)
             except User.DoesNotExist:
                 # Handle the case where the user does not exist
                 return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-            
-            # Authenticate the user
-            user = authenticate(username=user.username, password=password)
-            
-            if user:
-                if user.is_active:
-                    if not user.suspend and not user.block:
-                        # Login the user
-                        login(request, user)
-                        refresh = RefreshToken.for_user(user)
-                        data = {
-                            'refresh' : str(refresh),
-                            'access' : str(refresh.access_token)
-                        }
-                        return Response(data, status=status.HTTP_200_OK)
-                    elif user.suspend:
-                        return Response({"message": "School Has Been Suspended"}, status=status.HTTP_400_BAD_REQUEST)
-                    elif user.block:
-                        return Response({"message": "School Has Been Blocked"}, status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    return Response({"message": "User is not active"}, status=status.HTTP_400_BAD_REQUEST)
+      
+        if not email or not password:
+            return Response({'error': 'Please provide both username and password'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = authenticate(username=user.username, password=password)
+        print(user)
+
+        if user is not None:
+            if user.is_active:
+                try:
+                    token = Token.objects.get(user=user)
+                except Token.DoesNotExist:
+                    token = Token.objects.create(user=user)
+                return Response({'token': token.key}, status=status.HTTP_200_OK)
             else:
-                return Response({"message": "Invalid Username or Password"}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response({'error': 'User is not active'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
         
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
 @api_view(['POST'])
 def activate(request):
     if request.method == 'POST':
@@ -133,9 +175,6 @@ def activate(request):
                     return Response({"message": "User activated"}, status=status.HTTP_201_CREATED)  
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-            
-
 
 @api_view(['POST'])
 def logout_view(request):

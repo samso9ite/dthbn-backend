@@ -29,6 +29,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from django.contrib.auth.models import User
 
 
 class Pdf(View):
@@ -104,29 +105,53 @@ def load_state_origin(request):
     return render(request, 'school/origin.html', {'lga': lga} )
 
 
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def Dashboard(request):
+#     user = request.user
+#     school_data = ''
+#     if user.is_school:
+#         if user.profile_update:
+#             school_data =   School.objects.get(User=user.id)
+#             exam_reg_stud = ExamRegistration.objects.filter(institute_id=school_data.id).count()
+#             total_indexed = Indexing.objects.filter(institution_id=request.user).count()
+#             notification = Ticket.objects.filter(Q(ticket_status='Answered') & Q(notification=False)).count()
+   
+#             context =    {
+#                 'school_data': school_data,
+#                 'exam_reg_stud': exam_reg_stud,
+#                 'total_indexed': total_indexed,
+#                 'notification' : notification,
+#             }
+#             return Response({"data": context}, status=status.HTTP_200_OK)
+#     else:
+#         return Response({"message": "User isn't a school"}, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def Dashboard(request):
     user = request.user
+    print(user)
     school_data = ''
-    if user.is_authenticated and user.is_school:
+    if user.is_school:
+        print("User is school")
         if user.profile_update:
+            print("Profile updated")
             school_data = School.objects.get(User=user.id)
-       
             exam_reg_stud = ExamRegistration.objects.filter(institute_id=school_data.id).count()
             total_indexed = Indexing.objects.filter(institution_id=request.user).count()
             notification = Ticket.objects.filter(Q(ticket_status='Answered') & Q(notification=False)).count()
-   
-            context =    {
+
+            context = {
                 'school_data': school_data,
                 'exam_reg_stud': exam_reg_stud,
                 'total_indexed': total_indexed,
-                'notification' : notification,
+                'notification': notification,
             }
             return Response({"data": context}, status=status.HTTP_200_OK)
-        # else:
-        #    return Response({"message":"Profil not updated"}, stat)
     else:
-        return Response({"message":"User isn't a school"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": "User isn't a school"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"message": "User isn't a school"}, status=status.HTTP_404_NOT_FOUND)
 
 @login_required
 def AccountUpdate(request, User):

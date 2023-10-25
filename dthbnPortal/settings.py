@@ -31,13 +31,15 @@ SECRET_KEY = '2u7qhk(%4jhj3qz6+s(^zik_rv7hy^b54$1$cjs^!7v((x^m_e'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['136.244.113.115','portal.dthbn.gov.ng', '127.0.0.1']
+ALLOWED_HOSTS = ['136.244.113.115','portal.dthbn.gov.ng', '127.0.0.1', 'localhost', ]
+CORS_ALLOW_ALL_ORIGINS = True
 
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'email_marketing',
     'sweetify',
     'cities_light',
@@ -48,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'rest_framework',
+    'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -59,11 +62,12 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'dthbnPortal.urls'
@@ -191,6 +195,8 @@ GOOGLE_RECAPTCHA_SECRET_KEY = '6LfRdPcUAAAAAMsiOm6wo_y-oYFUoRpbPHwjMKyH'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # 'rest_framework.authentication.TokenAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
     ]
 }
