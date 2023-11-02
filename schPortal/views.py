@@ -23,7 +23,7 @@ from django_xhtml2pdf.utils import generate_pdf
 from django_xhtml2pdf.views import PdfMixin
 
 # API's import 
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, UpdateAPIView
 from .serializers import *
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -66,7 +66,6 @@ class SchoolProfile(CreateAPIView):
             except user.DoesNotExist:
                 return Response({"message": "User doesn't exist"}, status= status.HTTP_400_BAD_REQUEST)
             # return super().form_valid(form)
-    
     except Exception as e:
         print(e)
         raise e
@@ -104,46 +103,31 @@ def load_state_origin(request):
     lga = LGA.objects.filter(region_id=state_id)
     return render(request, 'school/origin.html', {'lga': lga} )
 
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def Dashboard(request):
-#     user = request.user
-#     school_data = ''
-#     if user.is_school:
-#         if user.profile_update:
-#             school_data =   School.objects.get(User=user.id)
-#             exam_reg_stud = ExamRegistration.objects.filter(institute_id=school_data.id).count()
-#             total_indexed = Indexing.objects.filter(institution_id=request.user).count()
-#             notification = Ticket.objects.filter(Q(ticket_status='Answered') & Q(notification=False)).count()
-   
-#             context =    {
-#                 'school_data': school_data,
-#                 'exam_reg_stud': exam_reg_stud,
-#                 'total_indexed': total_indexed,
-#                 'notification' : notification,
-#             }
-#             return Response({"data": context}, status=status.HTTP_200_OK)
-#     else:
-#         return Response({"message": "User isn't a school"}, status=status.HTTP_400_BAD_REQUEST)
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def Dashboard(request):
     user = request.user
-    print(user)
     school_data = ''
     if user.is_school:
-        print("User is school")
         if user.profile_update:
-            print("Profile updated")
             school_data = School.objects.get(User=user.id)
+            print(school_data.address)
+            school = {
+                'id':user.id,
+                'sch_id': school_data.id,
+                'sch_name':user.username,
+                'sch_address': school_data.address,
+                'email': school_data.hod_email,
+                'hod_name': school_data.hod_name,
+                'sch_phone': school_data.phone_number,
+                # 'logo':school_data.sch_logo,
+
+            }
             exam_reg_stud = ExamRegistration.objects.filter(institute_id=school_data.id).count()
             total_indexed = Indexing.objects.filter(institution_id=request.user).count()
             notification = Ticket.objects.filter(Q(ticket_status='Answered') & Q(notification=False)).count()
-
             context = {
-                'school_data': school_data,
+                'school_data': school,
                 'exam_reg_stud': exam_reg_stud,
                 'total_indexed': total_indexed,
                 'notification': notification,
@@ -153,75 +137,51 @@ def Dashboard(request):
         return Response({"message": "User isn't a school"}, status=status.HTTP_400_BAD_REQUEST)
     return Response({"message": "User isn't a school"}, status=status.HTTP_404_NOT_FOUND)
 
-@login_required
-def AccountUpdate(request, User):
-    if request.user.is_authenticated and request.user.is_school:
-        sch_update_data = School.objects.get(User=request.user.id)
-        school_data = sch_update_data
-        context = {}
-        form = schUpdateForm(request.POST or None, instance = sch_update_data) 
-        if form.is_valid():
-            form.save(commit=False)
-            updated_at = timezone.now()
-            form.save(commit=True)
-            sweetify.success(request, 'Profile Updated Successfully', button='Great!')
-        return render(request, "school/schools_account_update.html", {'form': form, 'school_data':school_data})  
-    else:
-        return HttpResponseRedirect(reverse("Auth:Register"))     
+ 
 
+class AccountUpdateView(UpdateAPIView):
+    queryset = School.objects.all()
+    serializer_class = schUpdateSerializer 
+    permission_classes = IsAuthenticated    
 
-class NewIndexingView(CreateView):
-    model = Indexing
-    template_name = "school/add_indexing.html"
-    redirect_field_name = reverse_lazy("Auth:Register")
-    form_class =  IndexingForm
-    success_url = reverse_lazy('schoolPortal:new_indexing')
+class NewIndexingView(CreateAPIView):
+    serializer_class = indexingSerializer
+    permission_classes = IsAuthenticated
 
-    def form_valid(self, form) :
+    def perform_create(self, serializer) :
         school_instance = School.objects.get(User_id=self.request.user.id)
-        form.instance.year="2022-2023"
-        form.instance.institution_id = self.request.user.id
         indexing_status = closeIndexing.objects.filter(id=1)    
         for obj in indexing_status:
            
             indexing_state = obj.access
             if indexing_state is False:
-                current_year = datetime.datetime.now().year
-                nxt_year = current_year + 1
-                # year = str(current_year) + "-" + str(nxt_year) 
-                year ="2022-2023"
+                year = serializer.validated_data['year']
                 indexed = Indexing.objects.filter(institution_id=self.request.user.id, year=year).count()
                 assigned= IndexLimit.objects.get(school=school_instance.id, year=year)
                 assigned_quota = assigned.assigned_limit  
                 try:
-                   
                     if indexed is not 0:
                         if assigned_quota:
                             if indexed  == int(assigned_quota):
                                 sweetify.error(self.request, "Oops! Limit has been reached", persist='OK')
-                                return(HttpResponseRedirect(self.request.META['HTTP_REFERER']))
+                                return Response({"message":"Limit has been reached"}, status=status.HTTP_400_BAD_REQUEST)
                             else:
-                                form.instance.institution_id = self.request.user.id
-                                form.save()
-                                sweetify.success(self.request, 'Indexed Successful', button='Great!')
-                                return super().form_valid(form)
+                                institution_id = self.request.user.id
+                                serializer.save(institution=institution_id)
+                                return Response({"message":"Index created successfully"}, status=status.HTTP_201_CREATED)
                                 
                         else:
-                            sweetify.error(self.request, "Oops! Contact the board limit has not been set ", persist='OK')
-                            return(HttpResponseRedirect(self.request.META['HTTP_REFERER']))
+                           return Response({"message":"Contact the board, Limit hasn't been set"}, status=status.HTTP_400_BAD_REQUEST)
                     elif indexed is 0 and assigned_quota:
-                      
-                        form.instance.institution_id = self.request.user.id
-                      
-                        form.save()
-                        sweetify.success(self.request, 'Indexed Successful', button='Great!')
-                        return super().form_valid(form)
+                        institution_id = self.request.user.id
+                        serializer.save(institution=institution_id)
+                        return Response({"message":"Index created successfully"}, status=status.HTTP_201_CREATED)
+                    
                 except Exception as e:
                     raise e
             else:
-                sweetify.error(self.request, "Indexing Closed", persist='OK')
-                return(HttpResponseRedirect(self.request.META['HTTP_REFERER']))
-        return HttpResponseRedirect(reverse_lazy('schoolPortal:new_indexing'))
+                return Response({"message":"Indexing Closed"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message":"Please contact the admin an error occured"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @login_required
@@ -282,15 +242,6 @@ def create_exam_record(request):
                 sweetify.error(request, 'Exam Registraton Closed', button='Great!')
                 return(HttpResponseRedirect(request.META['HTTP_REFERER']))
         return HttpResponseRedirect(reverse_lazy('schoolPortal:new_exam'))
-    def get_context_data(self, **kwargs):
-        country_data = Country.objects.all()
-        state_data = Region.objects.all()
-        lga_data = LGA.objects.all()
-        ctx =  super(ExamReg, self).get_context_data(**kwargs)
-        ctx['countries'] = country_data
-        ctx['state'] = state_data
-        ctx['lga'] = lga_data
-        return ctx
         
    
 class ExamReg(CreateView, LoginRequiredMixin):
@@ -446,7 +397,7 @@ def ExamListView(request, year):
 
 class edit_index(UpdateView):
     model = Indexing
-    form_class = IndexingForm
+    # form_class = IndexingForm
     template_name = 'school/add_indexing.html'
     success_url = reverse_lazy('schoolPortal:new_indexing')
 

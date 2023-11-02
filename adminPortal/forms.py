@@ -21,7 +21,7 @@ class setExamLimit(forms.ModelForm):
 class UpdateIndexStatus(forms.ModelForm):
     class Meta:
         model = Indexing
-        fields = ('approved', 'unapproved', 'comment',)
+        fields = ('approved', 'comment',)
 
 class UpdateExamStatus(forms.ModelForm):
     class Meta:

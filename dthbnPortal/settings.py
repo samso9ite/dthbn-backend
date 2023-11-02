@@ -31,7 +31,7 @@ SECRET_KEY = '2u7qhk(%4jhj3qz6+s(^zik_rv7hy^b54$1$cjs^!7v((x^m_e'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['136.244.113.115','portal.dthbn.gov.ng', '127.0.0.1', 'localhost', ]
+ALLOWED_HOSTS = ['136.244.113.115','portal.dthbn.gov.ng', '127.0.0.1', 'localhost',]
 CORS_ALLOW_ALL_ORIGINS = True
 
 

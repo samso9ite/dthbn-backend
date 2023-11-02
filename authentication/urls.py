@@ -14,6 +14,7 @@ urlpatterns = [
     # url(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', views.activate, name='activate'),
     path('activate',views.activate, name='activate-account'),
     path('forgot-password', views.forgot_password, name='forgot-password'),
+    path('reset-password/<uidb64>/<token>', views.reset_password, name="reset-password"),
     url(r'^password_reset/$', auth_views.PasswordResetView.as_view(),
         name='password_reset'),
     url(r'^password_reset/done/$',
@@ -26,4 +27,5 @@ urlpatterns = [
     path('logout/', views.logout_view, name="logout"),
     path('resetPassword/', views.change_password_view, name="sch_pwd_reset"),
     path('adminPasswordReset/', views.change_password_view, name="adminPasswordReset"),
+    # path('token/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
 ]

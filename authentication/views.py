@@ -29,6 +29,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
+from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import authenticate
 
 @api_view(['POST'])
@@ -37,8 +38,6 @@ def sign_up_view(request):
     if request.method == 'POST':
         if serializer.is_valid():
             if serializer.validated_data['is_professional']:
-            # is_professional = serializer.validated_data['is_professional']
-            # if is_professional:
                 programme = serializer.validated_data['programme']
                 codeVar = serializer.validated_data['code']
                 code = ''
@@ -70,6 +69,8 @@ def sign_up_view(request):
             user.email_user(subject, message)
             return Response({"message": "User created successfully", 'data':serializer.data}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else :
+        return Response({"message": "Request not successful"}, status=status.HTTP_500_SERVER_ERROR)
 
 # @api_view(['POST'])
 # def login_view(request):
@@ -113,9 +114,11 @@ def sign_up_view(request):
         
 #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# class CustomTokenObtainPairView(TokenObtainPairView):
+#     serializer_class = loginSerializer
 
 class login_view(APIView):
-    authentication_classes = (TokenAuthentication,)  # Apply TokenAuthentication for this view
+    # authentication_classes = (TokenAuthentication,)  # Apply TokenAuthentication for this view
 
     def post(self, request):
         serializer = loginSerializer(data=request.data)
@@ -133,15 +136,14 @@ class login_view(APIView):
             return Response({'error': 'Please provide both username and password'}, status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(username=user.username, password=password)
-        print(user)
-
+        
         if user is not None:
             if user.is_active:
-                try:
-                    token = Token.objects.get(user=user)
-                except Token.DoesNotExist:
-                    token = Token.objects.create(user=user)
-                return Response({'token': token.key}, status=status.HTTP_200_OK)
+                # try:
+                #     token = Token.objects.get(user=user)
+                # except Token.DoesNotExist:
+                #     token = Token.objects.create(user=user)
+                return user
             else:
                 return Response({'error': 'User is not active'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
@@ -166,12 +168,11 @@ def activate(request):
                 if user.is_school:
                     SchoolCode.objects.filter(reg_number=user.code).update(used=True, user_id=user.id)
                     user.save()
-                    login(request, user)
                     return Response({"message": "User activated"}, status=status.HTTP_201_CREATED)
                 elif user.is_professional:
                     ProfessionalCode.objects.filter(reg_number=user.code).update(used=True, user_id=user.id)
                     user.save()
-                    login(request, user)
+                    # login(request, user)
                     return Response({"message": "User activated"}, status=status.HTTP_201_CREATED)  
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
