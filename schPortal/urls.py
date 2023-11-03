@@ -27,13 +27,7 @@ urlpatterns = [
     path('delete_record/<int:id>', views.delete_record, name='delete_record'),
     path('submit_all_index', views.submit_index_record, name='submit_all_index'),
     path('submit_all_exam_record', views.submit_exam_record, name='submit_all_exam_record'),
-
-    path('ajax/load/', views.load_cities, name='ajax_load'),
-    path('ajax/lga/', views.load_lga, name='ajax_lga'),
-    path('ajax/load_lga/', views.load_state, name='ajax_load_lga'),
-    path('ajax/load_origin/', views.load_state_origin, name='ajax_load_origin'),
-    path('ajax/load_office_cities/', views.load_office_cities, name='load_office_cities'),
-    path('ajax/load_office_lga/', views.load_office_lga, name='load_office_lga'),
+    
     # Ticket Urls
     # path('ticket', views.Ticket.as_view(), name='ticket'),  
     path('view_ticket', views.ViewTicket.as_view(), name='ticket'), 

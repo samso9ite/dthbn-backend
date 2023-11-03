@@ -23,7 +23,7 @@ from django_xhtml2pdf.utils import generate_pdf
 from django_xhtml2pdf.views import PdfMixin
 
 # API's import 
-from rest_framework.generics import CreateAPIView, UpdateAPIView
+from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, UpdateAPIView
 from .serializers import *
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -69,39 +69,6 @@ class SchoolProfile(CreateAPIView):
     except Exception as e:
         print(e)
         raise e
-        
-       
-def load_cities(request):
-    country_id = request.GET.get('residential_country')
-    region = Region.objects.filter(country_id=country_id).order_by('name')
-    return render(request, 'school/dropdown_list.html', {'region': region} )
-
-def load_office_cities(request):
-    country_id = request.GET.get('office_country')
-    region = Region.objects.filter(country_id=country_id).order_by('name')
-    return render(request, 'school/office_cities.html', {'region': region} )
-
-def load_lga(request):
-    state_id = request.GET.get('residential_state')
-    lga = LGA.objects.filter(region_id=state_id)
-    return render(request, 'school/lga_dropdown.html', {'lga': lga} )
-
-def load_office_lga(request):
-    state_id = request.GET.get('office_state')
-    lga = LGA.objects.filter(region_id=state_id)
-    return render(request, 'school/office_lga.html', {'lga': lga} )
-
-
-def load_state(request):
-    state_id = request.GET.get('state_of_origin')
-    print(state_id)
-    lga = LGA.objects.filter(region_id=state_id)
-    return render(request, 'school/state_dropdown.html', {'lga': lga} )
-
-def load_state_origin(request):
-    state_id = request.GET.get('state_of_birth')
-    lga = LGA.objects.filter(region_id=state_id)
-    return render(request, 'school/origin.html', {'lga': lga} )
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -111,7 +78,6 @@ def Dashboard(request):
     if user.is_school:
         if user.profile_update:
             school_data = School.objects.get(User=user.id)
-            print(school_data.address)
             school = {
                 'id':user.id,
                 'sch_id': school_data.id,
@@ -120,8 +86,6 @@ def Dashboard(request):
                 'email': school_data.hod_email,
                 'hod_name': school_data.hod_name,
                 'sch_phone': school_data.phone_number,
-                # 'logo':school_data.sch_logo,
-
             }
             exam_reg_stud = ExamRegistration.objects.filter(institute_id=school_data.id).count()
             total_indexed = Indexing.objects.filter(institution_id=request.user).count()
@@ -142,11 +106,12 @@ def Dashboard(request):
 class AccountUpdateView(UpdateAPIView):
     queryset = School.objects.all()
     serializer_class = schUpdateSerializer 
-    permission_classes = IsAuthenticated    
+    permission_classes = [IsAuthenticated]    
 
 class NewIndexingView(CreateAPIView):
     serializer_class = indexingSerializer
-    permission_classes = IsAuthenticated
+    permission_classes = [IsAuthenticated]
+    queryset = Indexing.objects.all()
 
     def perform_create(self, serializer) :
         school_instance = School.objects.get(User_id=self.request.user.id)
@@ -163,7 +128,6 @@ class NewIndexingView(CreateAPIView):
                     if indexed is not 0:
                         if assigned_quota:
                             if indexed  == int(assigned_quota):
-                                sweetify.error(self.request, "Oops! Limit has been reached", persist='OK')
                                 return Response({"message":"Limit has been reached"}, status=status.HTTP_400_BAD_REQUEST)
                             else:
                                 institution_id = self.request.user.id
@@ -183,240 +147,67 @@ class NewIndexingView(CreateAPIView):
                 return Response({"message":"Indexing Closed"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message":"Please contact the admin an error occured"}, status=status.HTTP_400_BAD_REQUEST)
 
-
-@login_required
-def create_exam_record(request):
-    if request.user.is_authenticated and request.user.is_school:
-        school_instance = School.objects.get(User_id=request.user.id)
-        exam_status = closeExamRegistration.objects.filter(id=1)
-        # if request.method == "POST":
-        for obj in exam_status:
-            exam_state = obj.access
-            if exam_state is False:
-                current_year = datetime.datetime.now().year
-                nxt_year = current_year + 1
-                last_year = current_year - 1 
-                year = str(last_year) + "-" + str(current_year)
-                print(year)
-                print(request.user.id)
-                print(school_instance)
-                registered = ExamRegistration.objects.filter(institute_id=request.user.id, year=year).count()
-                assigned_quota = examLimit.objects.values_list('assigned_limit', flat=True).get(school=school_instance.id, year=year)
-                print(assigned_quota)
-                if request.method == "POST":
-                    form = ExamRegForm(request.POST or None)
-                    try:
-                        if registered != 0:
-                            if assigned_quota:
-                                if registered  == int(assigned_quota):
-                                    sweetify.error(request, "Oops! Limit has been reached", persist='OK')
-                                    return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-                                else:
-                                    if form.is_valid():
-                                        form.save(commit=False)
-                                        form.instance.institute_id = request.user.id
-                                        print(form.instance.institute_id)
-                                        form.instance.year = year
-                                        print(form.instance.year)
-                                        form.save()
-                                        sweetify.success(request, 'Exam registration Successful', button='Great!')
-                                        # return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-                                        return render(request, "school/Exam_reg.html") 
-                
-                            else:
-                                sweetify.error(request, "Oops! Contact the board limit has not been set ", persist='OK')
-                                return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-                        elif registered == 0 and assigned_quota:
-                            if form.is_valid():
-                                form.save(commit=False)
-                                form.instance.institute_id = request.user.id
-                                form.instance.year = year
-                                form.save(commit=True)
-                                print(form)
-                                sweetify.success(request, 'Registration Successful', button='Great!')
-                                return render(request, "school/Exam_reg.html")
-                        
-                    except:
-                        pass
-            else:
-                sweetify.error(request, 'Exam Registraton Closed', button='Great!')
-                return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-        return HttpResponseRedirect(reverse_lazy('schoolPortal:new_exam'))
-        
-   
-class ExamReg(CreateView, LoginRequiredMixin):
-    model = ExamRegistration
-    form_class = ExamRegForm
-    redirect_field_name = reverse_lazy("Auth:Register")
-    success_url = reverse_lazy('schoolPortal:exam_reg')
-    template_name = 'school/Exam_reg.html'
+class ExamReg(CreateAPIView):
+    serializer = examSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = ExamRegistration.objects.all()
  
-    def form_valid(self, form):
-        # print(form)
+    def perform_create(self, serializer):
         school_instance = School.objects.get(User_id=self.request.user.id)
         exam_status = closeExamRegistration.objects.filter(id=1)
         for obj in exam_status:
             exam_state = obj.access
             if exam_state is False:
-                current_year = datetime.datetime.now().year
-                nxt_year = current_year + 1
-                last_year = current_year - 1 
-                year = str(last_year) + "-" + str(current_year)
+                year = serializer.validated_data['year']
                 registered = ExamRegistration.objects.filter(institute_id=self.request.user.id, year=year).count()
                 assigned_quota = examLimit.objects.values_list('assigned_limit', flat=True).get(school=school_instance.id, year=year)
                 try:
                     if registered != 0:
                         if assigned_quota:
                             if registered  == int(assigned_quota):
-                                sweetify.error(self.request, "Oops! Limit has been reached", persist='OK')
-                                return(HttpResponseRedirect(self.request.META['HTTP_REFERER']))
+                               return Response({"message":"Limit has been reached"}, status=status.HTTP_400_BAD_REQUEST)
                             else:
-                                form.instance.institute_id = self.request.user.id
-                                form.instance.year = year
-                                sweetify.success(self.request, 'Exam registration Successful', button='Great!')
-                                return super().form_valid(form)
+                                institute_id = self.request.user.id
+                                serializer.save(institute=institute_id)
+                                return Response({"message":"Exam record created successfully"}, status=status.HTTP_201_CREATED)
             
                         else:
-                            sweetify.error(self.request, "Oops! Contact the board limit has not been set ", persist='OK')
-                            return(HttpResponseRedirect(self.request.META['HTTP_REFERER']))
+                            return Response({"message":"Contact the board, Limit hasn't been set"}, status=status.HTTP_400_BAD_REQUEST)
                     elif registered == 0 and assigned_quota:
-                        form.instance.institute_id = self.request.user.id
-                        form.instance.year = year
-                        sweetify.success(self.request, 'Registration Successful', button='Great!')
-                        return super().form_valid(form)
+                        institute_id = self.request.user.id
+                        serializer.save(institute=institute_id)
+                        return Response({"message":"Exam record created successfully"}, status=status.HTTP_201_CREATED)
                     
                 except:
                     pass
             else:
-                sweetify.error(self.request, 'Exam Registraton Closed', button='Great!')
-                return(HttpResponseRedirect(self.request.META['HTTP_REFERER']))
-        return HttpResponseRedirect(reverse_lazy('schoolPortal:exam_reg'))
-
-
-    def get_context_data(self, **kwargs):
-        country_data = Country.objects.all()
-        state_data = Region.objects.all()
-        lga_data = LGA.objects.all()
-        ctx =  super(ExamReg, self).get_context_data(**kwargs)
-        ctx['countries'] = country_data
-        ctx['state'] = state_data
-        ctx['lga'] = lga_data
-        return ctx
+                return Response({"message":"Exam registeration closed"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message":"Unknown error, please contact the admin"}, status=status.HTTP_400_BAD_REQUEST)
     
+class IndexListView(ListAPIView):
+    serializer = indexingSerializer
+    permission_classes = [IsAuthenticated]
 
-class CurrentIndexing(TemplateView):
-    template_name = 'school/current_indexing.html'
+    def get_queryset(self, year):
+        return Indexing.objects.filter(institution=self.request.user.id, year=year)
 
+class ExamListView(ListAPIView):
+    serializer = examSerializer
+    permission_classes = [IsAuthenticated]
 
-@login_required
-def IndexListView(request, year):
-    if request.user.is_authenticated and request.user.is_school:
-        queryset = ''
-        total_indexed = ''
-        total_unapproved = ''
-        total_approved = ''
-        currentIndex_total = ''
-        close_query = ''
-       
-        if '/school/current_index' in request.path:
-            queryset = Indexing.objects.filter(institution_id=request.user,submitted=False, year=year)
-            queryset.filter()
-            currentIndex_total =Indexing.objects.filter(institution=request.user.id,submitted=False, year=year).count()
-        elif '/school/indexed_record/' in request.path:
-            queryset  = Indexing.objects.filter(institution=request.user, submitted=True, year=year)
-            total_indexed = Indexing.objects.filter(institution=request.user, submitted=True, year=year).count()
-        elif '/school/approved_student/' in request.path:
-            queryset = Indexing.objects.filter(institution=request.user).filter(approved = True, year=year)
-            total_approved = Indexing.objects.filter(institution=request.user).filter(approved = True, year=year).count()
-        elif '/school/unapproved_student/' in request.path:
-            queryset = Indexing.objects.filter(institution=request.user).filter(unapproved = True, submitted=True, year=year)
-            total_unapproved = Indexing.objects.filter(institution=request.user).filter(unapproved = True, submitted=True, year=year).count()
-        else :
-            pass
-        page = request.GET.get('page', 1)  
-        paginator = Paginator(queryset, 10000)
+    def get_queryset(self, year):
+        print(year)
+        return ExamRegistration.objects.filter(institute=self.request.user.id, year=year)
 
-        try:
-            indexed = paginator.page(page)
-        except PageNotAnInteger:
-            indexed = paginator.page(1)
-        except EmptyPage:
-            indexed = paginator.page(paginator.num_pages)
-        context = {'currentIndex_total': currentIndex_total, 'close_query':close_query, 'total_indexed': total_indexed, 'total_unapproved': total_unapproved
-                    ,'total_approved': total_approved, 'indexed': indexed, 'year':year,}
-                    
-        return render(request, 'school/indexing_list.html', context)
-    
-    elif request.user.is_authenticated and not request.user.is_school:
-        return HttpResponseRedirect(reverse("Auth:Register")) 
+class UpdateIndexView(UpdateAPIView):
+    serializer = indexingSerializer
+    queryset = Indexing.objects.all()
+    permission_classes = [IsAuthenticated]
 
-@login_required
-def ExamListView(request, year):
-    if request.user.is_authenticated and request.user.is_school:
-        queryset = ''
-        currentExam_total = ''
-        total_exam_submitted = ''
-        total_exam_approved = ''
-        total_exam_declined = ''
-        close_query = ''
-             
-        if '/school/current_exam_record/' in request.path:
-            queryset = ExamRegistration.objects.filter(institute=request.user.id, year=year).filter(submitted=False)
-            currentExam_total = ExamRegistration.objects.filter(institute=request.user.id, year=year).filter(submitted=False).count()
-            close_query = School.objects.get(User_id=request.user)
-        elif '/school/submitted_exam_record/'  in request.path:
-            queryset = ExamRegistration.objects.filter(institute=request.user.id, year=year).filter(submitted=True)
-            total_exam_submitted =  ExamRegistration.objects.filter(institute=request.user.id, year=year).filter(submitted=True).count()
-        elif  '/school/approved_exam_record/'  in request.path:
-            queryset = ExamRegistration.objects.filter(institute=request.user.id, year=year).filter(approved=True)
-            total_exam_approved = ExamRegistration.objects.filter(institute=request.user.id, year=year).filter(approved=True).count()
-
-        elif '/school/declined_exam_record/'  in request.path:
-            queryset = ExamRegistration.objects.filter(institute=request.user.id, year=year).filter(declined=True)
-            total_exam_declined = ExamRegistration.objects.filter(institute=request.user.id, year=year).filter(declined=True).count()
-        else:
-            pass
-
-        page = request.GET.get('page', 1)
-        paginator = Paginator(queryset, 30)
-
-        try:
-            exam_records = paginator.page(page)
-        except PageNotAnInteger :
-            exam_records = paginator.page(1)
-        except EmptyPage :
-            exam_records = paginator.page(paginator.num_pages)
-        context = {'exam_records': exam_records, 'currentExam_total': currentExam_total, 'total_exam_submitted': total_exam_submitted
-            ,'total_exam_approved': total_exam_approved, 'total_exam_declined': total_exam_declined,
-            'close_query':close_query, 'year':year}
-
-        return render(request, 'school/exam_record_list.html', context)
-
-    elif request.user.is_authenticated and not request.user.is_school:
-        return HttpResponseRedirect(reverse("Auth:Register")) 
-
-class edit_index(UpdateView):
-    model = Indexing
-    # form_class = IndexingForm
-    template_name = 'school/add_indexing.html'
-    success_url = reverse_lazy('schoolPortal:new_indexing')
-
-    def form_valid(self, form):
-        form.save(commit=False)
-        form.instance.institution = self.request.user
-        form.instance.year="2022-2023"
-        form.save()
-        sweetify.success(self.request, 'Record updated succesffully', button='Great!')
-        return super().form_valid(form)
-    
-    def get_success_url(self):
-        return reverse_lazy('schoolPortal:currentIndex', kwargs={"year":'2022-2023'})
-
-class update_exam_record(UpdateView):
-    model = ExamRegistration
-    form_class = ExamRegForm
-    template_name = 'school/Exam_reg.html'
-    success_url = reverse_lazy('profPortal:dashboard') 
+class UpdateExamView(UpdateView):
+    serializer = examSerializer
+    queryset = ExamRegistration.objects.all()
+    permission_classes = [IsAuthenticated]
 
 @login_required
 def delete_record(request, id):
