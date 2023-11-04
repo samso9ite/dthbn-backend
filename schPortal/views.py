@@ -96,7 +96,7 @@ def Dashboard(request):
                 'total_indexed': total_indexed,
                 'notification': notification,
             }
-            return Response({"data": context}, status=status.HTTP_200_OK)
+            return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
     else:
         return Response({"message": "User isn't a school"}, status=status.HTTP_400_BAD_REQUEST)
     return Response({"message": "User isn't a school"}, status=status.HTTP_404_NOT_FOUND)
@@ -111,41 +111,28 @@ class AccountUpdateView(UpdateAPIView):
 class NewIndexingView(CreateAPIView):
     serializer_class = indexingSerializer
     permission_classes = [IsAuthenticated]
-    queryset = Indexing.objects.all()
 
-    def perform_create(self, serializer) :
-        school_instance = School.objects.get(User_id=self.request.user.id)
-        indexing_status = closeIndexing.objects.filter(id=1)    
-        for obj in indexing_status:
-           
-            indexing_state = obj.access
-            if indexing_state is False:
-                year = serializer.validated_data['year']
-                indexed = Indexing.objects.filter(institution_id=self.request.user.id, year=year).count()
-                assigned= IndexLimit.objects.get(school=school_instance.id, year=year)
-                assigned_quota = assigned.assigned_limit  
-                try:
-                    if indexed is not 0:
-                        if assigned_quota:
-                            if indexed  == int(assigned_quota):
-                                return Response({"message":"Limit has been reached"}, status=status.HTTP_400_BAD_REQUEST)
-                            else:
-                                institution_id = self.request.user.id
-                                serializer.save(institution=institution_id)
-                                return Response({"message":"Index created successfully"}, status=status.HTTP_201_CREATED)
-                                
-                        else:
-                           return Response({"message":"Contact the board, Limit hasn't been set"}, status=status.HTTP_400_BAD_REQUEST)
-                    elif indexed is 0 and assigned_quota:
-                        institution_id = self.request.user.id
-                        serializer.save(institution=institution_id)
-                        return Response({"message":"Index created successfully"}, status=status.HTTP_201_CREATED)
-                    
-                except Exception as e:
-                    raise e
-            else:
-                return Response({"message":"Indexing Closed"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"message":"Please contact the admin an error occured"}, status=status.HTTP_400_BAD_REQUEST)
+    def perform_create(self, serializer):
+        user_id = self.request.user.id
+        indexing_status = closeIndexing.objects.filter(id=1).first()
+    
+        if indexing_status and not indexing_status.access:
+            school_instance = School.objects.get(User_id=user_id)
+            year = serializer.validated_data.get('year')
+            indexed = Indexing.objects.filter(institution_id=user_id, year=year).count()
+            assigned = IndexLimit.objects.filter(school=school_instance, year=year).first()
+            if not assigned:
+                return Response({"message": "Contact the board, Limit hasn't been set"}, status=status.HTTP_400_BAD_REQUEST)
+
+            assigned_quota = assigned.assigned_limit
+
+            if indexed != 0 and indexed == assigned_quota:
+                return Response({"message": "Limit has been reached"}, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save(institution=self.request.user)
+            return Response({"message": "Index created successfully"}, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"message": "Indexing Closed"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ExamReg(CreateAPIView):
     serializer = examSerializer
@@ -174,8 +161,7 @@ class ExamReg(CreateAPIView):
                         else:
                             return Response({"message":"Contact the board, Limit hasn't been set"}, status=status.HTTP_400_BAD_REQUEST)
                     elif registered == 0 and assigned_quota:
-                        institute_id = self.request.user.id
-                        serializer.save(institute=institute_id)
+                        serializer.save(institute=self.request.user)
                         return Response({"message":"Exam record created successfully"}, status=status.HTTP_201_CREATED)
                     
                 except:
@@ -185,19 +171,22 @@ class ExamReg(CreateAPIView):
         return Response({"message":"Unknown error, please contact the admin"}, status=status.HTTP_400_BAD_REQUEST)
     
 class IndexListView(ListAPIView):
-    serializer = indexingSerializer
+    serializer_class = indexingSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = 'year'
 
-    def get_queryset(self, year):
-        return Indexing.objects.filter(institution=self.request.user.id, year=year)
+    def get_queryset(self):
+        lookup_value = self.kwargs.get(self.lookup_field)
+        return Indexing.objects.filter(institution=self.request.user.id, year=lookup_value)
 
 class ExamListView(ListAPIView):
     serializer = examSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = 'year'
 
-    def get_queryset(self, year):
-        print(year)
-        return ExamRegistration.objects.filter(institute=self.request.user.id, year=year)
+    def get_queryset(self):
+        lookup_value = self.kwargs.get(self.lookup_field)
+        return ExamRegistration.objects.filter(institute=self.request.user.id, year=lookup_value)
 
 class UpdateIndexView(UpdateAPIView):
     serializer = indexingSerializer
@@ -209,27 +198,18 @@ class UpdateExamView(UpdateView):
     queryset = ExamRegistration.objects.all()
     permission_classes = [IsAuthenticated]
 
-@login_required
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_record(request, id):
-    if '/school/delete_record/' in request.path :
-        try :
-            record = Indexing.objects.get(id=id)  
-        except Indexing.DoesNotExist:
-            pass
-        record.delete()
-        sweetify.success(request, "Record has been deleted")
-        return(HttpResponseRedirect(request.META['HTTP_REFERER'])) 
-
-    elif '/school/current_exam_record/' in request.path:
-        try:
-            record = ExamRegistration.objects.get(id=id)
-        except record.DoesNotExist:
-            pass
-        record.delete()
-        return render(request, 'school/exam_record_list.html')
-
-  
-@login_required 
+    try :
+        record = Indexing.objects.get(id=id)  
+    except Indexing.DoesNotExist:
+       return Response({"message":"Record not found"}, status=status.HTTP_404_NOT_FOUND)
+    record.delete()
+    return Response({"message":"Index record deleted successfully"}, status=status.HTTP_200_OK) 
+ 
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated]) 
 def submit_index_record(request):
     records = ''
     
@@ -237,13 +217,12 @@ def submit_index_record(request):
         records = Indexing.objects.filter(submitted=False, institution_id=request.user.id)
         if records :
             records.update(submitted=True) 
-            sweetify.success(request, 'Record has been submitted' , button='Great!')
+            return Response({"message":"Indexed students submitted"}, status=status.HTTP_200_OK)
         else:
-            sweetify.error(request, 'Record Empty' , button='Ok!')
+            return Response({"message":"An error occured, please contact admin"}, status=status.HTTP_400_BAD_REQUEST)
 
     except Indexing.DoesNotExist:
-        sweetify.error(request, 'Record Doesn\'t Exist' , button='Great!')
-    return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+        return Response({"message":"Indexing doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
 
 @login_required
 def submit_exam_record(request):
@@ -262,8 +241,6 @@ def submit_exam_record(request):
         sweetify.error(request, 'Record Doesn\'t Exist' , button='Great!')
     return(HttpResponseRedirect(request.META['HTTP_REFERER']))
 
-class ViewTicket(TemplateView):
-    template_name = 'school/view_ticket.html'
 
 class CreateTicket(CreateView, LoginRequiredMixin):
     model = Ticket
