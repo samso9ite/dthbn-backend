@@ -11,20 +11,24 @@ urlpatterns = [
     # path('update/(?P<pk>\d+)/edit/', views.AccountUpdate.as_view(), name="update"),
     path('profile_update/<int:pk>/', views.AccountUpdateView.as_view(), name="account_update"),
     path('schoolprofile/', views.SchoolProfile.as_view(), name='schoolProfile'),
-    path('new_indexing/', views.NewIndexingView.as_view(), name='new_indexing'),
-    path('exam_reg/', views.ExamReg.as_view(), name="exam_reg"),
-    path('indexed_record/<str:year>', views.IndexListView.as_view(), name='indexed_record'),
     
-    path('exam_record/<str:year>'   , views.ExamListView.as_view(), name='exam_record'),
+    #Indexing API's 
+    path('new_indexing/', views.NewIndexingView.as_view(), name='new_indexing'),
+    path('indexed_record/<str:year>', views.IndexListView.as_view(), name='indexed_record'),
+    path('delete_index_record/<int:id>', views.delete_index_record, name='delete_index_record'),
     path('update_indexing/<int:pk>', views.UpdateIndexView.as_view(), name='update_indexing'),
-    path('update_exam_record/<int:pk>/', views.UpdateExamView.as_view(), name='update_exam_record'),
-    path('delete_record/<int:id>', views.delete_record, name='delete_record'),
     path('submit_all_index', views.submit_index_record, name='submit_all_index'),
+    path('indexing_status/<int:id>', views.IndexingStatusView.as_view(), name="indexing_status"),
+    
+    # Examination API's
+    path('exam_reg/', views.ExamReg.as_view(), name="exam_reg"),
+    path('exam_record/<str:year>'   , views.ExamListView.as_view(), name='exam_record'),
+    path('update_exam_record/<int:pk>/', views.UpdateExamView.as_view(), name='update_exam_record'),
     path('submit_all_exam_record', views.submit_exam_record, name='submit_all_exam_record'),
+    path('exam_registeration_status/<int:id>', views.examRegisterationStatusView.as_view(), name="exam_reg_status"),
+    path('delete_exam_record/<int:id>', views.delete_exam_record, name='delete_record'),
 
     # Ticket Urls
-    # path('ticket', views.Ticket.as_view(), name='ticket'),  
-    # path('view_ticket', views.ViewTicket.as_view(), name='ticket'), 
     path('create_ticket', views.CreateTicket.as_view(), name='create_ticket'),
     path('all_ticket', views.ticket_list, name='all_ticket'),
     path('answered_ticket', views.ticket_list, name='answered_ticket'),

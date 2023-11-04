@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from schPortal.models import *
+from adminPortal.models import closeIndexing, closeExamRegistration
 
 class schUpdateSerializer(serializers.ModelSerializer):
     state = serializers.CharField(required=False)
@@ -26,4 +27,14 @@ class examSerializer(serializers.ModelSerializer):
     verified = serializers.BooleanField(allow_null=True, default=False)
     class Meta:
         model = ExamRegistration
+        fields = ("__all__")
+
+class indexingStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = closeIndexing
+        fields = ("__all__")
+
+class examStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = closeExamRegistration
         fields = ("__all__")

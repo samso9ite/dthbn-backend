@@ -23,7 +23,7 @@ from django_xhtml2pdf.utils import generate_pdf
 from django_xhtml2pdf.views import PdfMixin
 
 # API's import 
-from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, UpdateAPIView
+from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView
 from .serializers import *
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
@@ -198,15 +198,38 @@ class UpdateExamView(UpdateView):
     queryset = ExamRegistration.objects.all()
     permission_classes = [IsAuthenticated]
 
+class IndexingStatusView(RetrieveAPIView):
+    queryset = closeIndexing.objects.all()
+    lookup_field = 'id'
+    permission_classes = [IsAuthenticated]
+    serializer_class = indexingStatusSerializer
+
+class examRegisterationStatusView(RetrieveAPIView):
+    queryset = closeExamRegistration.objects.all()
+    lookup_field = 'id'
+    permission_classes = [IsAuthenticated]
+    serializer_class = examStatusSerializer
+
+
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def delete_record(request, id):
+def delete_index_record(request, id):
     try :
         record = Indexing.objects.get(id=id)  
     except Indexing.DoesNotExist:
        return Response({"message":"Record not found"}, status=status.HTTP_404_NOT_FOUND)
     record.delete()
-    return Response({"message":"Index record deleted successfully"}, status=status.HTTP_200_OK) 
+    return Response({"message":"Index record deleted successfully"}, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_exam_record(request, id):
+    try :
+        record = ExamRegistration.objects.get(id=id)  
+    except ExamRegistration.DoesNotExist:
+       return Response({"message":"Record not found"}, status=status.HTTP_404_NOT_FOUND)
+    record.delete()
+    return Response({"message":"Exam record deleted successfully"}, status=status.HTTP_200_OK) 
  
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated]) 
@@ -224,22 +247,20 @@ def submit_index_record(request):
     except Indexing.DoesNotExist:
         return Response({"message":"Indexing doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
 
-@login_required
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
 def submit_exam_record(request):
     records = ''
     try :
-        print("Exam Submit Section")
         records = ExamRegistration.objects.filter(submitted=False, institute_id=request.user.id)
-        print(records)
         if records :
             records.update(submitted=True) 
-            sweetify.success(request, 'Record has been submitted' , button='Great!')
-        else:
-            sweetify.error(request, 'Record Empty' , button='Ok!')
-        
+            return Response({"message":"Exam record created"}, status=status.HTTP_200_OK)
+        else :
+            return Response({"message":"An error occured, please contact admin"}, status=status.HTTP_400_BAD_REQUEST)
+            
     except ExamRegistration.DoesNotExist:
-        sweetify.error(request, 'Record Doesn\'t Exist' , button='Great!')
-    return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+        return Response({"message":"Exam Registeration doesn't exist"}, status=status.HTTP_404_NOT_FOUND)
 
 
 class CreateTicket(CreateView, LoginRequiredMixin):
