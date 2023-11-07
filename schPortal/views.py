@@ -89,12 +89,16 @@ def Dashboard(request):
             }
             exam_reg_stud = ExamRegistration.objects.filter(institute_id=school_data.id).count()
             total_indexed = Indexing.objects.filter(institution_id=request.user).count()
+            current_indexing = Indexing.objects.filter(institution_id=request.user, submitted=False).count()
+            current_exam_reg = ExamRegistration.objects.filter(institute_id=school_data.id, submitted=False).count()
             notification = Ticket.objects.filter(Q(ticket_status='Answered') & Q(notification=False)).count()
             context = {
                 'school_data': school,
                 'exam_reg_stud': exam_reg_stud,
                 'total_indexed': total_indexed,
                 'notification': notification,
+                'current_indexing': current_indexing,
+                'current_exam_reg': current_exam_reg
             }
             return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
     else:
