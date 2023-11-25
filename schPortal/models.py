@@ -60,7 +60,7 @@ class Indexing(models.Model):
     marriage_cert = models.ImageField(upload_to='images/indexing/marriage_cert', null=True, blank=True)
     o_level_cert = models.ImageField(upload_to='images/OlevelResult',  null=True, blank=True)
     examinations = models.CharField(max_length=100, null=True, blank=True)
-    grades = models.CharField(max_length=300, null=True, blank=True)
+    grades = models.TextField(null=True, blank=True)
     submitted = models.BooleanField(default=False)
     approved = models.BooleanField(default=False)
     comment = models.CharField(max_length=500, blank=True, null=True)
