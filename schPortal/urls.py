@@ -17,14 +17,14 @@ urlpatterns = [
     path('indexed_record/<str:year>', views.IndexListView.as_view(), name='indexed_record'),
     path('delete_index_record/<int:id>', views.delete_index_record, name='delete_index_record'),
     path('update_indexing/<int:pk>', views.UpdateIndexView.as_view(), name='update_indexing'),
-    path('submit_all_index', views.submit_index_record, name='submit_all_index'),
+    path('submit_all_index/', views.submit_index_record, name='submit_all_index'),
     path('indexing_status/<int:id>', views.IndexingStatusView.as_view(), name="indexing_status"),
     
     # Examination API's
-    path('exam_reg/', views.ExamReg.as_view(), name="exam_reg"),
+    path('exam_reg/', views.ExamRegView.as_view(), name="exam_reg"),
     path('exam_record/<str:year>'   , views.ExamListView.as_view(), name='exam_record'),
     path('update_exam_record/<int:pk>/', views.UpdateExamView.as_view(), name='update_exam_record'),
-    path('submit_all_exam_record', views.submit_exam_record, name='submit_all_exam_record'),
+    path('submit_all_exam_record/', views.submit_exam_record, name='submit_all_exam_record'),
     path('exam_registeration_status/<int:id>', views.examRegisterationStatusView.as_view(), name="exam_reg_status"),
     path('delete_exam_record/<int:id>', views.delete_exam_record, name='delete_record'),
 

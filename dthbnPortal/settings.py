@@ -33,7 +33,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['136.244.113.115','portal.dthbn.gov.ng', '127.0.0.1', 'localhost',]
 CORS_ALLOW_ALL_ORIGINS = True
-
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
 
 
 # Application definition

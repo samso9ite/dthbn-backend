@@ -23,7 +23,7 @@ class indexingSerializer(serializers.ModelSerializer):
 class examSerializer(serializers.ModelSerializer):
     submitted = serializers.BooleanField(default=False, allow_null = True)
     approved = serializers.BooleanField(default=False, allow_null = True)
-    comment = serializers.CharField(allow_null=True)
+    comment = serializers.CharField(allow_null=True, default="No Comment")
     verified = serializers.BooleanField(allow_null=True, default=False)
     class Meta:
         model = ExamRegistration

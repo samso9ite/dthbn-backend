@@ -74,13 +74,10 @@ class SchoolProfile(CreateAPIView):
 @permission_classes([IsAuthenticated])
 def Dashboard(request):
     user = request.user
-    print(user)
     school_data = ''
     if user.is_school:
-        print("This is a school")
         if user.profile_update:
             school_data = School.objects.get(User=user.id)
-            print(school_data)
             school = {
                 'id':user.id,
                 'sch_id': school_data.id,
@@ -89,6 +86,11 @@ def Dashboard(request):
                 'email': school_data.hod_email,
                 'hod_name': school_data.hod_name,
                 'sch_phone': school_data.phone_number,
+                # 'profile_img': school_data.sch_logo,
+                'state': school_data.state,
+                'region': school_data.region,
+                'hod_phone': school_data.hod_phone,
+                'hod_email': school_data.hod_email
             }
             exam_reg_stud = ExamRegistration.objects.filter(institute_id=school_data.id).count()
             total_indexed = Indexing.objects.filter(institution_id=request.user).count()
@@ -124,19 +126,15 @@ class NewIndexingView(CreateAPIView):
         indexing_status = closeIndexing.objects.filter(id=1).first()
         
         # Check if indexing is closed
-        print(indexing_status.access)
         if indexing_status and indexing_status.access is False:
             return Response({"message": "Indexing Closed"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Indexing is open
         school_instance = School.objects.get(User_id=user_id)
-        print(school_instance)
         year = self.request.data.get('year')
 
         indexed = Indexing.objects.filter(institution_id=user_id, year=year).count()
         assigned = IndexLimit.objects.filter(school=school_instance.id, year=year).first()
-        print(assigned)
-        print(year)
         # Check if not assigned
         if not assigned:
             return Response({"message": "Contact the board, Limit hasn't been set"}, status=status.HTTP_400_BAD_REQUEST)
@@ -161,42 +159,45 @@ class NewIndexingView(CreateAPIView):
 
 
 
-
-class ExamReg(CreateAPIView):
-    serializer = examSerializer
+class ExamRegView(CreateAPIView):
+    serializer_class = examSerializer
     permission_classes = [IsAuthenticated]
-    queryset = ExamRegistration.objects.all()
- 
+
+    def create(self, request, *args, **kwargs):
+        user_id = self.request.user.id
+        exam_status = closeExamRegistration.objects.filter(id=1).first()
+        
+        # Check if indexing is closed
+        if exam_status and exam_status.access is False:
+            return Response({"message": "Exam Registeration Closed"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Indexing is open
+        school_instance = School.objects.get(User_id=user_id)
+        year = self.request.data.get('year')
+        exam_record = ExamRegistration.objects.filter(institute_id=user_id, year=year).count()
+        print(school_instance.id)
+        assigned_quota =  examLimit.objects.values_list('assigned_limit', flat=True).get(school=school_instance.id, year=year)
+        # Check if not assigned
+        if not assigned_quota:
+            return Response({"message": "Contact the board, Limit hasn't been set"}, status=status.HTTP_400_BAD_REQUEST)
+
+        
+
+        # Check if limit has been reached
+        if exam_record != 0 and exam_record == assigned_quota:
+            return Response({"message": "Limit has been reached"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Continue with the creation of the object
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response({"message": "Exam Record Created Successfully"}, status=status.HTTP_201_CREATED, headers=headers)
+
     def perform_create(self, serializer):
-        school_instance = School.objects.get(User_id=self.request.user.id)
-        exam_status = closeExamRegistration.objects.filter(id=1)
-        for obj in exam_status:
-            exam_state = obj.access
-            if exam_state is False:
-                year = serializer.validated_data['year']
-                registered = ExamRegistration.objects.filter(institute_id=self.request.user.id, year=year).count()
-                assigned_quota = examLimit.objects.values_list('assigned_limit', flat=True).get(school=school_instance.id, year=year)
-                try:
-                    if registered != 0:
-                        if assigned_quota:
-                            if registered  == int(assigned_quota):
-                               return Response({"message":"Limit has been reached"}, status=status.HTTP_400_BAD_REQUEST)
-                            else:
-                                institute_id = self.request.user.id
-                                serializer.save(institute=institute_id)
-                                return Response({"message":"Exam record created successfully"}, status=status.HTTP_201_CREATED)
-            
-                        else:
-                            return Response({"message":"Contact the board, Limit hasn't been set"}, status=status.HTTP_400_BAD_REQUEST)
-                    elif registered == 0 and assigned_quota:
-                        serializer.save(institute=self.request.user)
-                        return Response({"message":"Exam record created successfully"}, status=status.HTTP_201_CREATED)
-                    
-                except:
-                    pass
-            else:
-                return Response({"message":"Exam registeration closed"}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"message":"Unknown error, please contact the admin"}, status=status.HTTP_400_BAD_REQUEST)
+        # Perform any additional actions before saving the object
+        serializer.save(institute=self.request.user)
     
 class IndexListView(ListAPIView):
     serializer_class = indexingSerializer
@@ -208,7 +209,7 @@ class IndexListView(ListAPIView):
         return Indexing.objects.filter(institution=self.request.user.id, year=lookup_value)
 
 class ExamListView(ListAPIView):
-    serializer = examSerializer
+    serializer_class = examSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'year'
 
@@ -217,12 +218,12 @@ class ExamListView(ListAPIView):
         return ExamRegistration.objects.filter(institute=self.request.user.id, year=lookup_value)
 
 class UpdateIndexView(UpdateAPIView):
-    serializer = indexingSerializer
+    serializer_class = indexingSerializer
     queryset = Indexing.objects.all()
     permission_classes = [IsAuthenticated]
 
-class UpdateExamView(UpdateView):
-    serializer = examSerializer
+class UpdateExamView(UpdateAPIView):
+    serializer_class = examSerializer
     queryset = ExamRegistration.objects.all()
     permission_classes = [IsAuthenticated]
 
