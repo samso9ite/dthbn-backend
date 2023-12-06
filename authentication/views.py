@@ -239,7 +239,7 @@ def reset_password(request,  uidb64, token):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def change_password_view(request):
+def change_pass_view(request):
     if request.method == 'POST':
         serializer = passwordResetSerializer(data=request.data)
         if serializer.is_valid():

@@ -25,7 +25,7 @@ urlpatterns = [
     url(r'^reset/done/$', auth_views.PasswordResetCompleteView.as_view(),
         name='password_reset_complete'),
     path('logout/', views.logout_view, name="logout"),
-    path('resetPassword/', views.change_password_view, name="sch_pwd_reset"),
-    path('adminPasswordReset/', views.change_password_view, name="adminPasswordReset"),
+    path('change_pwd/', views.change_pass_view, name="sch_pwd_reset"),
+    # path('adminPasswordReset/', views.change_password_view, name="adminPasswordReset"),
     # path('token/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
 ]
