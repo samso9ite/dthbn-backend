@@ -86,7 +86,7 @@ def Dashboard(request):
                 'email': school_data.hod_email,
                 'hod_name': school_data.hod_name,
                 'sch_phone': school_data.phone_number,
-                # 'profile_img': school_data.sch_logo,
+                # 'sch_logo': school_data.sch_logo,
                 'state': school_data.state,
                 'region': school_data.region,
                 'hod_phone': school_data.hod_phone,

@@ -19,52 +19,66 @@ from adminPortal.render import Render
 from django.core.serializers import serialize
 from django.template.loader import render_to_string
 
+
+# API's Import
+# API's import 
+from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView
+from .serializers import *
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from django.contrib.auth.models import User
+
+
 class Dashboard(TemplateView):
     template_name = 'adminPortal/dashboard.html'
     
 
-@login_required
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def dashboard(request):
     all_school = User.objects.filter(is_school=True).order_by('id')
     total_sch_num = User.objects.filter(is_school=True).count()
     total_prof_num = User.objects.filter(is_professional=True).count()
     total_submited_index = Indexing.objects.filter(submitted=True).count() 
-    indexing_notification = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Indexing') 
-    | Q(ticket_status='Open') & Q(notification=False) & Q(department='Indexing') ).count()
-    technical_notification = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Technical') 
-    | Q(ticket_status='Open') & Q(notification=False) & Q(department='Technical') ).count()
-    examination_notification = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Examination') 
-    | Q(ticket_status='Open') & Q(notification=False) & Q(department='Examination') ).count()
-    if 'admin/reset_notification' in request.path:
-        try:
-            indexing_notifications = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Indexing') 
-            | Q(ticket_status='Open') & Q(notification=False) & Q(department='Indexing') )
-            technical_notifications = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Technical') 
-            | Q(ticket_status='Open') & Q(notification=False) & Q(department='Technical') )
-            examination_notifications = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Examination') 
-            | Q(ticket_status='Open') & Q(notification=False) & Q(department='Examination') )
+    # indexing_notification = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Indexing') 
+    # | Q(ticket_status='Open') & Q(notification=False) & Q(department='Indexing') ).count()
+    # technical_notification = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Technical') 
+    # | Q(ticket_status='Open') & Q(notification=False) & Q(department='Technical') ).count()
+    # examination_notification = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Examination') 
+    # | Q(ticket_status='Open') & Q(notification=False) & Q(department='Examination') ).count()
+    # if 'admin/reset_notification' in request.path:
+    #     try:
+    #         indexing_notifications = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Indexing') 
+    #         | Q(ticket_status='Open') & Q(notification=False) & Q(department='Indexing') )
+    #         technical_notifications = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Technical') 
+    #         | Q(ticket_status='Open') & Q(notification=False) & Q(department='Technical') )
+    #         examination_notifications = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Examination') 
+    #         | Q(ticket_status='Open') & Q(notification=False) & Q(department='Examination') )
            
-            if indexing_notifications:
-                reset = indexing_notifications.update(notification=True)
-                return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
-            elif technical_notifications:
-                reset = technical_notifications.update(notification=True)
-                return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
+    #         if indexing_notifications:
+    #             reset = indexing_notifications.update(notification=True)
+    #             return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
+    #         elif technical_notifications:
+    #             reset = technical_notifications.update(notification=True)
+    #             return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
                 
-            elif examination_notifications:
-                reset = examination_notifications.update(notification=True)
-                return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
+    #         elif examination_notifications:
+    #             reset = examination_notifications.update(notification=True)
+    #             return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
 
-            elif not examination_notifications or technical_notifications or indexing_notifications:
-                sweetify.error(request, 'Notification is empty', button='Great!')
-                return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
-        except:
-            pass
+    #         elif not examination_notifications or technical_notifications or indexing_notifications:
+    #             sweetify.error(request, 'Notification is empty', button='Great!')
+    #             return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
+    #     except:
+    #         pass
            
 
     context = {'all_school':all_school, 'total_sch_num':total_sch_num, 'total_submited_index':total_submited_index,
-    'examination_notification':examination_notification, 'technical_notification':technical_notification, 'indexiang_notification':indexing_notification, 'total_prof_num':total_prof_num}
-    return render(request, 'adminPortal/dashboard.html',context)
+    'total_prof_num':total_prof_num}
+    return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
+    
 
 class AccreditedSchools(TemplateView):
     template_name = 'adminPortal/indexing.html'
@@ -82,44 +96,52 @@ def school_index(request):
 
     return render (request, 'adminPortal/indexing.html', {'school_index_records': school_index_records})
 
-@login_required
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def accredited_schools(request):
     school_records = User.objects.filter(is_school=True).select_related('user')
     accreditedCount = school_records.count()
+
+    context = {'schools':school_records, 'accreditedCount': accreditedCount}
+
+    return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
    
-    page = request.GET.get('page', 1)
-    paginator = Paginator(school_records, 10000)
+    # page = request.GET.get('page', 1)
+    # paginator = Paginator(school_records, 10000)
 
-    try:
-        accredited_schools_record = paginator.page(page)
-    except PageNotAnInteger:
-        accredited_schools_record = paginator.page(1)
-    except EmptyPage:
-        accredited_schools_record = paginator.page(paginator.num_pages)
-    return render (request, 'adminPortal/accredited.html', {'accredited_schools_record':accredited_schools_record, 'accreditedCount':accreditedCount})
+    # try:
+    #     accredited_schools_record = paginator.page(page)
+    # except PageNotAnInteger:
+    #     accredited_schools_record = paginator.page(1)
+    # except EmptyPage:
+    #     accredited_schools_record = paginator.page(paginator.num_pages)
+    # return render (request, 'adminPortal/accredited.html', {'accredited_schools_record':accredited_schools_record, 'accreditedCount':accreditedCount})
 
-@login_required
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def professionals(request):
     professional_records = Professional.objects.all().select_related('profuser')
-   
-    page = request.GET.get('page', 1)
-    paginator = Paginator(professional_records, 10000)
 
-    try:
-        all_professional_records = paginator.page(page)
-    except PageNotAnInteger:
-        all_professional_records = paginator.page(1)
-    except EmptyPage:
-        all_professional_records = paginator.page(paginator.num_pages)
+    return Response({"data": professional_records, "message":"Request successful"}, status=status.HTTP_200_OK)
+    # page = request.GET.get('page', 1)
+    # paginator = Paginator(professional_records, 10000)
 
-    return render (request, 'adminPortal/professionals.html', {'all_professional_records':all_professional_records})
+    # try:
+    #     all_professional_records = paginator.page(page)
+    # except PageNotAnInteger:
+    #     all_professional_records = paginator.page(1)
+    # except EmptyPage:
+    #     all_professional_records = paginator.page(paginator.num_pages)
 
-@login_required
+    # return render (request, 'adminPortal/professionals.html', {'all_professional_records':all_professional_records})
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
 def delete_professional(request, id):
     user_instance = Professional.objects.filter(id=id)
     user_instance.delete()
-    sweetify.success(request, 'Professional Record Deleted Successfully', button='Great!')
-    return HttpResponseRedirect(reverse('adminPortal:professionals')) 
+    return Response({"message": "Account deleted successfully"})
 
 @login_required
 def restriction(request, id):
@@ -162,7 +184,8 @@ def restriction(request, id):
 
 
 # Index List Method
-@login_required
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def indexed_list(request, year):
     all_schools = []
     approved_index = []
@@ -173,8 +196,8 @@ def indexed_list(request, year):
     indexed = School.objects.all()
     access_status = closeIndexing.objects.get(id=1)
    
-    page = request.GET.get('page', 1)
-    paginator = Paginator(indexed, 30)
+    # page = request.GET.get('page', 1)
+    # paginator = Paginator(indexed, 30)
     for index_record in indexed:
         school_indexed = Indexing.objects.filter(institution_id=index_record.User_id, year=year).count()
         approved_index_count = Indexing.objects.filter(institution=index_record.User_id,  year=year, approved=True).count()
@@ -188,15 +211,15 @@ def indexed_list(request, year):
         approved_index.append({index_record.id:approved_index_count})
         declined_index.append({index_record.id:declined_index_count})
   
-    try:
-        indexed_stu_list = paginator.page(page)
-    except PageNotAnInteger:
-        indexed_stu_list = paginator.page(1)
-    except EmptyPage:
-        indexed_stu_list = paginator.page(paginator.num_pages)
+    # try:
+    #     indexed_stu_list = paginator.page(page)
+    # except PageNotAnInteger:
+    #     indexed_stu_list = paginator.page(1)
+    # except EmptyPage:
+    #     indexed_stu_list = paginator.page(paginator.num_pages)
     context = {'indexed_stu_list': indexed_stu_list, 'all_schools':all_schools, 'year':year,  'limit':limit,'index_year':index_year,
                 'approved_index': approved_index, 'declined_index': declined_index, 'index_state':index_state, 'access_status':access_status,}
-    return render(request, 'adminPortal/indexing.html', context)
+    return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
 
 @register.filter
 def get_item(limit, index_year, key):
@@ -244,18 +267,18 @@ def exam_record(request, year):
             limit.append({each_school.id:sch_exam_limit.assigned_limit})
             exam_year.append({each_school.id:sch_exam_limit.year})
     
-    page = request.GET.get('page', 1)
-    paginator = Paginator(all_schools, 30)
+    # page = request.GET.get('page', 1)
+    # paginator = Paginator(all_schools, 30)
 
-    try:
-        all_school_record = paginator.page(page)
-    except PageNotAnInteger:
-        all_school_record = paginator.page(1)
-    except EmptyPage:
-        all_school_record = paginator(paginator.num_pages)
+    # try:
+    #     all_school_record = paginator.page(page)
+    # except PageNotAnInteger:
+    #     all_school_record = paginator.page(1)
+    # except EmptyPage:
+    #     all_school_record = paginator(paginator.num_pages)
     context =  {'all_school_record':all_school_record, 'all_records': all_records, 'limit':limit, 'exam_year':exam_year,
     'approved_records': approved_records, 'declined_records': declined_records, 'year':year, 'exam_status':exam_status}
-    return render(request, 'adminPortal/Examination_dept.html', context)
+    return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
 
 @register.filter
 def get_item(limit, exam_year, key):
@@ -284,89 +307,107 @@ def get_item(declined_records, key):
 # End of Exam Limit Method
 
 # Indexing Limit Method 
-@login_required
-def create_limit(request, id, year):
-    school_instance = School.objects.get(id=id)
-    form = createLimit(request.POST or None)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_limit(request):
+    serializer = CreateLimitSerializer(data=request.data)
+    # form = createLimit(request.POST or None)
     
-    if form.is_valid():
-        form.save(commit=False)
-        form.instance.school = school_instance.id
-        form.instance.year = year
-        form.save()
-        sweetify.success(request, 'Index Limit Assigned', button='Great!')
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+    if serializer.is_valid():
+        # form.save(commit=False)
+        # form.instance.school = school_instance.id
+        id = serializer.validated_data['school']
+        school_instance = School.objects.get(id=id)
+        serializer.save(school=school_instance.id)
+      
+        return Response({"message": "Index Limit Assigned"}, status=status.HTTP_200_OK)
     else:
-        sweetify.error(request, 'Invalid Value', button='Great!')
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+        return Response({"message": "An error occured, Please contact admin "} , status=status.HTTP_400_ERROR)
 
-@login_required
-def reset_limit(request, id, year):
-    school_instance = School.objects.get(id=id)
-    sch_data = IndexLimit.objects.filter(school=school_instance.id, year=year).first()
-    if sch_data:
-        form = createLimit(request.POST or None, instance = sch_data) 
-        if form.is_valid():
-            form.save()
-            sweetify.success(request, 'Updated Successfully', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-        else:   
-            sweetify.error(request, 'Invalid Value', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-    else:
-        form = createLimit(request.POST or None)
-        if form.is_valid():
-            form.save(commit=False)
-            form.instance.school = school_instance.id
-            form.instance.year = year
-            form.save()
-            sweetify.success(request, 'Index Limit Assigned', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-        else:
-            sweetify.error(request, 'Invalid Value', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+class UpdateIndexingLimit(UpdateAPIView):
+    serializer_class = CreateLimitSerializer
+    queryset = IndexLimit.objects.all()
+    permission_classes = [IsAuthenticated]
+       
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def reset_limit(request, id, year):
+#     serializer_class = CreateLimitSerializer(data=request.data)
+
+#     if serializer_class.is_valid():
+#         id = serializer_class.validated_data['school']
+#         school_instance = School.objects.get(id=id)
+#         sch_data = IndexLimit.objects.filter(school=school_instance.id, year=year).first()
+#         if sch_data:
+#             form = createLimit(request.POST or None, instance = sch_data) 
+#             if form.is_valid():
+#                 form.save()
+#                 sweetify.success(request, 'Updated Successfully', button='Great!')
+#                 return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#             else:   
+#                 sweetify.error(request, 'Invalid Value', button='Great!')
+#                 return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#         else:
+#             form = createLimit(request.POST or None)
+#             if form.is_valid():
+#                 form.save(commit=False)
+#                 form.instance.school = school_instance.id
+#                 form.instance.year = year
+#                 form.save()
+#                 sweetify.success(request, 'Index Limit Assigned', button='Great!')
+#                 return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#             else:
+#                 sweetify.error(request, 'Invalid Value', button='Great!')
+#                 return(HttpResponseRedirect(request.META['HTTP_REFERER']))
 
 # Exam Limit Method
-@login_required
-def create_exam_limit(request, id, year):
-    school_instance = School.objects.get(id=id)
-    form = setExamLimit(request.POST or None)
-    if form.is_valid():
-        form.save(commit=False)
-        form.instance.school = school_instance.id
-        form.instance.year = year
-        form.save()
-        sweetify.success(request, 'Exam Limit Assigned', button='Great!')
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_limit(request):
+    serializer = CreateExamLimitSerializer(data=request.data)
+    # form = createLimit(request.POST or None)
+    
+    if serializer.is_valid():
+        # form.save(commit=False)
+        # form.instance.school = school_instance.id
+        id = serializer.validated_data['school']
+        school_instance = School.objects.get(id=id)
+        serializer.save(school=school_instance.id)
+      
+        return Response({"message": "Exam Limit Assigned"}, status=status.HTTP_200_OK)
     else:
-        sweetify.error(request, 'Invalid Value', button='Great!')
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+        return Response({"message": "An error occured, Please contact admin "} , status=status.HTTP_400_ERROR)
 
-@login_required
-def reset_exam_limit(request, id, year):
-    school_instance = School.objects.get(id=id)
-    sch_data = examLimit.objects.filter(school=school_instance.id, year=year).first()
-    if sch_data:
-        form = setExamLimit(request.POST or None, instance = sch_data) 
-        if form.is_valid():
-            form.save()
-            sweetify.success(request, 'Limit Updated Successfully', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-        else:
-            sweetify.error(request, 'Invalid Value', button='Error!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-    else:
-        form = setExamLimit(request.POST or None)
-        if form.is_valid():
-            form.save(commit=False)
-            form.instance.school = school_instance.id
-            form.instance.year = year
-            form.save()
-            sweetify.success(request, 'Exam Limit Assigned', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-        else:
-            sweetify.error(request, 'Invalid Value', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+class UpdateExamLimit(UpdateAPIView):
+    serializer_class = CreateLimitSerializer
+    queryset = examLimit.objects.all()
+    permission_classes = [IsAuthenticated]
+
+# @login_required
+# def reset_exam_limit(request, id, year):
+#     school_instance = School.objects.get(id=id)
+#     sch_data = examLimit.objects.filter(school=school_instance.id, year=year).first()
+#     if sch_data:
+#         form = setExamLimit(request.POST or None, instance = sch_data) 
+#         if form.is_valid():
+#             form.save()
+#             sweetify.success(request, 'Limit Updated Successfully', button='Great!')
+#             return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#         else:
+#             sweetify.error(request, 'Invalid Value', button='Error!')
+#             return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#     else:
+#         form = setExamLimit(request.POST or None)
+#         if form.is_valid():
+#             form.save(commit=False)
+#             form.instance.school = school_instance.id
+#             form.instance.year = year
+#             form.save()
+#             sweetify.success(request, 'Exam Limit Assigned', button='Great!')
+#             return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#         else:
+#             sweetify.error(request, 'Invalid Value', button='Great!')
+#             return(HttpResponseRedirect(request.META['HTTP_REFERER']))
     
 
 
@@ -522,136 +563,136 @@ def exam_rec(request, id, year):
 
 
 
-@login_required
-def ticket_list(request):
-    if request.user.is_authenticated:
-        schools = []
-        # if 'admin/all_ticket' in request.path:
-        all_schools = User.objects.filter(is_school=True)
-        all_schools_count = Ticket.objects.filter(first_created=True).count()
-        for sch in all_schools:
-            if 'admin/all_ticket' in request.path:
-                sch_replies = Ticket.objects.filter(user_id=sch.id, ticket_status='School Reply', read=False).count()
-                open_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Open', read=False).count()
-                closed_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Closed').count()
-                answered_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Answered').count()
+# @login_required
+# def ticket_list(request):
+#     if request.user.is_authenticated:
+#         schools = []
+#         # if 'admin/all_ticket' in request.path:
+#         all_schools = User.objects.filter(is_school=True)
+#         all_schools_count = Ticket.objects.filter(first_created=True).count()
+#         for sch in all_schools:
+#             if 'admin/all_ticket' in request.path:
+#                 sch_replies = Ticket.objects.filter(user_id=sch.id, ticket_status='School Reply', read=False).count()
+#                 open_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Open', read=False).count()
+#                 closed_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Closed').count()
+#                 answered_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Answered').count()
             
-            elif 'admin/all_indexing_ticket' in request.path:
-                sch_replies = Ticket.objects.filter(user_id=sch.id, ticket_status='School Reply', read=False, department='Indexing').count()
-                open_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Open', read=False, department='Indexing').count()
-                closed_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Closed', department='Indexing').count()
-                answered_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Answered', department='Indexing').count()
-            elif 'admin/all_examination_ticket' in request.path:
-                sch_replies = Ticket.objects.filter(user_id=sch.id, ticket_status='School Reply', read=False, department='examination').count()
-                open_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Open', read=False, department='examination').count()
-                closed_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Closed', department='examination').count()
-                answered_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Answered', department='examination').count()
+#             elif 'admin/all_indexing_ticket' in request.path:
+#                 sch_replies = Ticket.objects.filter(user_id=sch.id, ticket_status='School Reply', read=False, department='Indexing').count()
+#                 open_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Open', read=False, department='Indexing').count()
+#                 closed_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Closed', department='Indexing').count()
+#                 answered_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Answered', department='Indexing').count()
+#             elif 'admin/all_examination_ticket' in request.path:
+#                 sch_replies = Ticket.objects.filter(user_id=sch.id, ticket_status='School Reply', read=False, department='examination').count()
+#                 open_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Open', read=False, department='examination').count()
+#                 closed_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Closed', department='examination').count()
+#                 answered_ticket = Ticket.objects.filter(user_id=sch.id, ticket_status='Answered', department='examination').count()
             
-            if sch_replies or open_ticket or answered_ticket:
-                schools.append({'sch_replies':sch_replies, 'sch_details': sch, 'open_ticket': open_ticket, 
-                'closed_ticket': closed_ticket, 'answered_ticket': answered_ticket})
+#             if sch_replies or open_ticket or answered_ticket:
+#                 schools.append({'sch_replies':sch_replies, 'sch_details': sch, 'open_ticket': open_ticket, 
+#                 'closed_ticket': closed_ticket, 'answered_ticket': answered_ticket})
                 
-        context = {'sch_replies': sch_replies, 'schools': schools,  'closed_ticket': closed_ticket, 'answered_ticket':answered_ticket,
-                    'open_ticket': open_ticket}
+#         context = {'sch_replies': sch_replies, 'schools': schools,  'closed_ticket': closed_ticket, 'answered_ticket':answered_ticket,
+#                     'open_ticket': open_ticket}
             
-        return render(request, 'adminPortal/ticket_list.html', context)
-    # else:
-    #     return HttpResponseRedirect(reverse("Auth:Register")) 
+#         return render(request, 'adminPortal/ticket_list.html', context)
+#     # else:
+#     #     return HttpResponseRedirect(reverse("Auth:Register")) 
         
-@login_required
-def sch_ticket_list(request, id):
-    if request.user.is_authenticated:
+# @login_required
+# def sch_ticket_list(request, id):
+#     if request.user.is_authenticated:
         
-        if 'admin/sch_reply_list/' in request.path:
-            query = Ticket.objects.filter(user_id = id, ticket_status='School Reply')
-            query.update(read=True)
-        elif 'admin/answered_ticket_list' in request.path:
-            query = Ticket.objects.filter(user_id=id, ticket_status='Answered')
-            query.update(read=True)
-        elif 'admin/opened_ticket_list' in request.path:
-            query = Ticket.objects.filter(user_id= id, ticket_status='Open')
-            query.update(read=True)
-        elif 'admin/closed_ticket_list' in request.path:
-            query = Ticket.objects.filter(user_id=  id, ticket_status='Closed')
+#         if 'admin/sch_reply_list/' in request.path:
+#             query = Ticket.objects.filter(user_id = id, ticket_status='School Reply')
+#             query.update(read=True)
+#         elif 'admin/answered_ticket_list' in request.path:
+#             query = Ticket.objects.filter(user_id=id, ticket_status='Answered')
+#             query.update(read=True)
+#         elif 'admin/opened_ticket_list' in request.path:
+#             query = Ticket.objects.filter(user_id= id, ticket_status='Open')
+#             query.update(read=True)
+#         elif 'admin/closed_ticket_list' in request.path:
+#             query = Ticket.objects.filter(user_id=  id, ticket_status='Closed')
 
-        elif 'admin/sch_reply_index_list/' in request.path:
-            query = Ticket.objects.filter(user_id = id, ticket_status='School Reply', department='Indexing')
-            query.update(read=True)
-        elif 'admin/answered_ticket_index_list' in request.path:
-            query = Ticket.objects.filter(user_id=id, ticket_status='Answered', department='Indexing')
-            query.update(read=True)
-        elif 'admin/opened_ticket_index_list' in request.path:
-            query = Ticket.objects.filter(user_id= id, ticket_status='Open', department='Indexing')
-            query.update(read=True)
-        elif 'admin/closed_ticket_index_list' in request.path:
-            query = Ticket.objects.filter(user_id=  id, ticket_status='Closed', department='Indexing')
+#         elif 'admin/sch_reply_index_list/' in request.path:
+#             query = Ticket.objects.filter(user_id = id, ticket_status='School Reply', department='Indexing')
+#             query.update(read=True)
+#         elif 'admin/answered_ticket_index_list' in request.path:
+#             query = Ticket.objects.filter(user_id=id, ticket_status='Answered', department='Indexing')
+#             query.update(read=True)
+#         elif 'admin/opened_ticket_index_list' in request.path:
+#             query = Ticket.objects.filter(user_id= id, ticket_status='Open', department='Indexing')
+#             query.update(read=True)
+#         elif 'admin/closed_ticket_index_list' in request.path:
+#             query = Ticket.objects.filter(user_id=  id, ticket_status='Closed', department='Indexing')
 
-        elif 'admin/sch_reply_exam_list/' in request.path:
-            query = Ticket.objects.filter(user_id = id, ticket_status='School Reply', department='Examination')
-            query.update(read=True)
-        elif 'admin/answered_ticket_exam_list' in request.path:
-            query = Ticket.objects.filter(user_id=id, ticket_status='Answered', department='Examination')
-            query.update(read=True)
-        elif 'admin/opened_ticket_exam_list' in request.path:
-            query = Ticket.objects.filter(user_id= id, ticket_status='Open', department='Examination')
-            query.update(read=True)
-        elif 'admin/closed_ticket_exam_list' in request.path:
-            query = Ticket.objects.filter(user_id=  id, ticket_status='Closed', department='Examination')
+#         elif 'admin/sch_reply_exam_list/' in request.path:
+#             query = Ticket.objects.filter(user_id = id, ticket_status='School Reply', department='Examination')
+#             query.update(read=True)
+#         elif 'admin/answered_ticket_exam_list' in request.path:
+#             query = Ticket.objects.filter(user_id=id, ticket_status='Answered', department='Examination')
+#             query.update(read=True)
+#         elif 'admin/opened_ticket_exam_list' in request.path:
+#             query = Ticket.objects.filter(user_id= id, ticket_status='Open', department='Examination')
+#             query.update(read=True)
+#         elif 'admin/closed_ticket_exam_list' in request.path:
+#             query = Ticket.objects.filter(user_id=  id, ticket_status='Closed', department='Examination')
         
        
-        page = request.GET.get('page', 1)
-        paginator = Paginator(query, 10000)
+#         page = request.GET.get('page', 1)
+#         paginator = Paginator(query, 10000)
 
-        try:
-            query_list = paginator.page(page)
-        except PageNotAnInteger:
-            query_list = paginator.page(1)
-        except EmptyPage:
-            query_list = paginator.page(paginator.num_pages)
+#         try:
+#             query_list = paginator.page(page)
+#         except PageNotAnInteger:
+#             query_list = paginator.page(1)
+#         except EmptyPage:
+#             query_list = paginator.page(paginator.num_pages)
 
-        return render(request, 'adminPortal/sch_ticket_list.html', {'query_list':query_list})
+#         return render(request, 'adminPortal/sch_ticket_list.html', {'query_list':query_list})
 
-@login_required
-def view_a_ticket(request, id):
-    record = Ticket.objects.get(id=id)
+# @login_required
+# def view_a_ticket(request, id):
+#     record = Ticket.objects.get(id=id)
 
-    latest_record = Ticket.objects.filter(ticket_id=record.ticket_id).latest('last_updated')
-    all_records = Ticket.objects.filter(ticket_id=record.ticket_id).order_by('-id')
+#     latest_record = Ticket.objects.filter(ticket_id=record.ticket_id).latest('last_updated')
+#     all_records = Ticket.objects.filter(ticket_id=record.ticket_id).order_by('-id')
  
-    if 'admin/update_ticket' in request.path:
-        if latest_record.ticket_status != 'Closed':
-            form = UpdateTicketForm(request.POST or None)
-            if form.is_valid:
-                form.save(commit=False)
-                form.instance.ticket_id =record.ticket_id
-                form.instance.user_id = record.user_id
-                form.instance.priority = record.priority
-                form.instance.department = record.department
-                form.instance.subject = record.department
-                form.instance.name = record.name
-                form.instance.created_date = record
-                form.instance.ticket_status = 'Answered'
-                form.save()
-                sweetify.success(request, 'Ticket Updated', button='Great!')
-                return HttpResponseRedirect(reverse('adminPortal:view_ticket', kwargs={'id':id}))
-            else:
-                sweetify.error(request, 'Form is not valid', button='Great!')
-        else:
-           sweetify.error(request, 'Ticket has been closed', button='Great!') 
+#     if 'admin/update_ticket' in request.path:
+#         if latest_record.ticket_status != 'Closed':
+#             form = UpdateTicketForm(request.POST or None)
+#             if form.is_valid:
+#                 form.save(commit=False)
+#                 form.instance.ticket_id =record.ticket_id
+#                 form.instance.user_id = record.user_id
+#                 form.instance.priority = record.priority
+#                 form.instance.department = record.department
+#                 form.instance.subject = record.department
+#                 form.instance.name = record.name
+#                 form.instance.created_date = record
+#                 form.instance.ticket_status = 'Answered'
+#                 form.save()
+#                 sweetify.success(request, 'Ticket Updated', button='Great!')
+#                 return HttpResponseRedirect(reverse('adminPortal:view_ticket', kwargs={'id':id}))
+#             else:
+#                 sweetify.error(request, 'Form is not valid', button='Great!')
+#         else:
+#            sweetify.error(request, 'Ticket has been closed', button='Great!') 
     
-    elif 'admin/close_ticket' in request.path:
-        if latest_record.ticket_status !=  'Closed':
-            all_answered = Ticket.objects.filter(ticket_status='Answered', ticket_id=record.ticket_id).update(closed=True)
-            latest_record.ticket_status = 'Closed'
-            latest_record.save()
-            sweetify.success(request, 'Ticket Closed', button='Great!')
-            return HttpResponseRedirect(reverse('adminPortal:view_ticket', kwargs={'id':id}))
-        else:
-            sweetify.error(request, "Ticket Status is Closed ")
+#     elif 'admin/close_ticket' in request.path:
+#         if latest_record.ticket_status !=  'Closed':
+#             all_answered = Ticket.objects.filter(ticket_status='Answered', ticket_id=record.ticket_id).update(closed=True)
+#             latest_record.ticket_status = 'Closed'
+#             latest_record.save()
+#             sweetify.success(request, 'Ticket Closed', button='Great!')
+#             return HttpResponseRedirect(reverse('adminPortal:view_ticket', kwargs={'id':id}))
+#         else:
+#             sweetify.error(request, "Ticket Status is Closed ")
         
         
-    return render(request, 'adminPortal/view_ticket.html', {'all_records': all_records, 'record': record, 'latest_record': latest_record
-    }) 
+#     return render(request, 'adminPortal/view_ticket.html', {'all_records': all_records, 'record': record, 'latest_record': latest_record
+#     }) 
     
 
 @login_required
