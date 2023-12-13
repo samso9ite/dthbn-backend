@@ -559,67 +559,89 @@ def sch_indexed_rec(request, id, year, type):
 
 class Exam(TemplateView):
     template_name = 'adminPortal/Examination_dept.html'
+
+
+
+# @api_view(['PATCH'])
+# @permission_classes([IsAuthenticated])
+# def exam_verification(request, id):
+#     if 'admin/approve_student/' in request.path:
+#         record = ExamRegistration.objects.get(id=id, submitted=True)
+#         record.approved = True
+#         record.declined = False
+#         record.comment = ''
+#         record.save()
+#         sweetify.success(request, 'Approved Successfully', button='Great!')
+#         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
     
+#     elif 'admin/decline_student/' in request.path:
+#         record = ExamRegistration.objects.get(id=id, submitted=True)
+#         form = UpdateExamStatus(request.POST, instance=record)
+#         if form.is_valid():
+#             form.save()
+#             sweetify.error(request, 'Declined Successfully', button='Great!')
+#             return(HttpResponseRedirect(request.META['HTTP_REFERER']))
 
-
-
-
-@login_required
-def exam_verification(request, id):
-    if 'admin/approve_student/' in request.path:
-        record = ExamRegistration.objects.get(id=id, submitted=True)
-        record.approved = True
-        record.declined = False
-        record.comment = ''
-        record.save()
-        sweetify.success(request, 'Approved Successfully', button='Great!')
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def approve_exam(request, id):
+    record = ExamRegistration.objects.get(id=id, submitted=True)
+    record.approved = True
+    record.declined = False
+    record.comment = ''
     
-    elif 'admin/decline_student/' in request.path:
-        record = ExamRegistration.objects.get(id=id, submitted=True)
-        form = UpdateExamStatus(request.POST, instance=record)
-        if form.is_valid():
-            form.save()
-            sweetify.error(request, 'Declined Successfully', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+    record.save()
+    return Response({"message":"Record Not Found"}, status=status.HTTP_200_OK)
 
-@login_required
-def exam_rec(request, id, year):
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def decline_exam(request, id):
+    record = ExamRegistration.objects.get(id=id, submitted=True)
+    record.approved = False
+    record.declined = True
+    record.comment = ''
+    
+    record.save()
+    return Response({"message":"Exam Registeration Declined"}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def exam_rec(request, id, year, type):
     declinedCount = ''
     indexedCount = ''
     approvedCount = ''
     
     sch_id = id
-    if 'admin/sch_exam_rec/' in request.path:
+    if type == 'submitted':
         record = ExamRegistration.objects.filter(institute_id=id, submitted=True, year=year)
         indexedCount = record.count()
 
-    elif 'admin/approved_exam_rec/' in request.path:
+    elif type == 'approved':
         record = ExamRegistration.objects.filter(institute_id=id, approved=True, year=year)
         approvedCount = record.count()
 
-    elif 'admin/declined_exam_rec/' in request.path:
+    elif type == 'declined':
         record = ExamRegistration.objects.filter(institute_id=id, declined=True, year=year)
         declinedCount = record.count()
        
 
     sch_name = School.objects.get(User_id=id)
     
-    page = request.GET.get('page', 1)
-    paginator = Paginator(record, 10)
+    # page = request.GET.get('page', 1)
+    # paginator = Paginator(record, 10)
 
-    try:
-        all_exam_records = paginator.page(page)
-    except PageNotAnInteger:
-        all_exam_records = paginator.page(1)
-    except EmptyPage:
-        all_exam_records = paginator.page(paginator.num_pages)
+    # try:
+    #     all_exam_records = paginator.page(page)
+    # except PageNotAnInteger:
+    #     all_exam_records = paginator.page(1)
+    # except EmptyPage:
+    #     all_exam_records = paginator.page(paginator.num_pages)
     
-    context = {'all_exam_records': all_exam_records, 'sch_name':sch_name, 'sch_id': sch_id,
+    context = {'all_exam_records': record, 'sch_name':sch_name, 'sch_id': sch_id,
                 'declinedCount':declinedCount, 'indexedCount':indexedCount, 'approvedCount':approvedCount }
   
         
-    return render(request, 'adminPortal/sch_exam_record.html', context)
+    return Response({"data":context, "message":"Record Fetched"}, status=status.HTTP_200_OK)
 
 
 
@@ -755,97 +777,104 @@ def exam_rec(request, id, year):
 #     }) 
     
 
-@login_required
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
 def submit_verified(request, id):
     user_instance = Indexing.objects.filter(Q(approved=True)|Q(unapproved=True), Q(verified=False), Q(institution_id=id))
     
     if user_instance:
         user_instance.update(verified=True)
-        sweetify.success(request, 'Verified Index Submitted', button='Great!')
-        return HttpResponseRedirect(reverse('adminPortal:sch_indexed_rec', kwargs={'id':id}))
+        # sweetify.success(request, 'Verified Index Submitted', button='Great!')
+        # return HttpResponseRedirect(reverse('adminPortal:sch_indexed_rec', kwargs={'id':id}))
+        return Response({"message":"Index Record Verified"}, status=status.HTTP_200_OK)
     else:
-        sweetify.error(request, 'Verified Index Already Submitted', button='Great!')
-        return HttpResponseRedirect(reverse('adminPortal:sch_indexed_rec', kwargs={'id':id}))
+        # sweetify.error(request, 'Verified Index Already Submitted', button='Great!')
+        return Response({"message":"Verified Index Already Submitted"}, status=status.HTTP_400_ERROR)
 
-@login_required
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
 def submit_exam_verified(request, id):
     user_instance = ExamRegistration.objects.filter(Q(approved=True)|Q(declined=True), Q(verified=False), Q(institute_id=id))
     
     if user_instance:
         user_instance.update(verified=True)
-        sweetify.success(request, 'Verified Record Submitted', button='Great!')
-        return HttpResponseRedirect(reverse('adminPortal:sch_exam_rec', kwargs={'id':id}))
+        # sweetify.success(request, 'Verified Record Submitted', button='Great!')
+        return Response({"message":"Exam Record Verified"}, status=status.HTTP_200_OK)
     else: 
-        sweetify.error(request, 'Verified Record Already Submitted', button='Great!')
-        return HttpResponseRedirect(reverse('adminPortal:sch_exam_rec', kwargs={'id':id}))
+        # sweetify.error(request, 'Verified Record Already Submitted', button='Great!')
+        return Response({"message":"Verified Record Already Submitted"}, status=status.HTTP_400_ERROR)
 
 
-@login_required
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
 def close_exam(request):
     exam_instance = closeExamRegistration.objects.update(access=True, date=datetime.datetime.now())
     for obj in exam_instance:
         if obj.access is False:
-            update_index = exam_instance
-            sweetify.success(request, 'Indexing Closed', button='Great!')
+            exam_instance
+            return Response({"message":"Indexing Closed"}, status=status.HTTP_200_OK)
         else:
-            update_index = exam_instance.update(access=False, date=datetime.datetime.now())
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+            exam_instance.update(access=False, date=datetime.datetime.now())
+        return Response({"message":"An error occured"}, status=status.HTTP_400_ERROR)
 
 @login_required
-def close_index_registration(request):
-    if 'admin/close_all_index_reg' in request.path :
-        exam_instance = School.objects.update(close_index_reg=True, closed_index_date=datetime.datetime.now())
+def close_index_registration(request, type):
+    if type == 'close' :
+        School.objects.update(close_index_reg=True, closed_index_date=datetime.datetime.now())
         closeIndexing.objects.update(access=True) 
-        sweetify.success(request, 'Indexing Closed', button='Great!')
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-    elif 'admin/open_all_index_reg' in request.path:
-        exam_instance = School.objects.update(close_index_reg=False, closed_index_date=datetime.datetime.now())
+        # sweetify.success(request, 'Indexing Closed', button='Great!')
+        return Response({"message":"Indexing Closed"}, status=status.HTTP_200_OK)
+    elif type == 'open':
+        School.objects.update(close_index_reg=False, closed_index_date=datetime.datetime.now())
         closeIndexing.objects.update(access=False) 
-        sweetify.success(request, 'Indexing Opened', button='Great!')
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+        return Response({"message":"Indexing Opened"}, status=status.HTTP_200_OK)
+        # sweetify.success(request, 'Indexing Opened', button='Great!')
+        # return(HttpResponseRedirect(request.META['HTTP_REFERER']))
     
 @login_required
-def close_selected_index_reg(request, id):
+def close_selected_index_reg(request, id, type):
     index_instance = School.objects.filter(id=id)
     for obj in index_instance:
-        if 'admin/close_index_reg' in request.path:
-            update_index = index_instance.update(close_index_reg=True, closed_exam_date=datetime.datetime.now())
-            sweetify.success(request, 'Indexing Closed', button='Great!')
-
-        else:
-            update_index = index_instance.update(close_index_reg=False, closed_exam_date=datetime.datetime.now())
-            sweetify.success(request, 'Indexing Opened', button='Great!')
+        if type == 'close':
+            index_instance.update(close_index_reg=True, closed_exam_date=datetime.datetime.now())
+            return Response({"message":"Indexing Closed"}, status=status.HTTP_200_OK)
+        elif type == open:
+            index_instance.update(close_index_reg=False, closed_exam_date=datetime.datetime.now())
+            return Response({"message":"Indexing Opened"}, status=status.HTTP_200_OK)
         
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+        return Response({"message":"An error occured"}, status=status.HTTP_400_ERROR)
 
 
 
 @login_required
-def close_exam(request):
-    if 'admin/close_all_exam_reg' in request.path :
-        exam_instance = School.objects.update(close_exam_reg=True, closed_exam_date=datetime.datetime.now())
+def close_exam(request, type):
+    if type == 'close' :
+        School.objects.update(close_exam_reg=True, closed_exam_date=datetime.datetime.now())
         closeExamRegistration.objects.update(access=True) 
-        sweetify.success(request, 'Examination Registeration Closed', button='Great!')
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-    elif 'admin/open_all_exam_reg' in request.path:
-        exam_instance = School.objects.update(close_exam_reg=False, closed_exam_date=datetime.datetime.now())
+        return Response({"message":"Exam Registeration Closed"}, status=status.HTTP_200_OK)
+        # sweetify.success(request, 'Examination Registeration Closed', button='Great!')
+        # return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+    elif type == 'open':
+        School.objects.update(close_exam_reg=False, closed_exam_date=datetime.datetime.now())
         closeExamRegistration.objects.update(access=False)
-        sweetify.success(request, 'Examination Registeration Opened', button='Great!')
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+        return Response({"message":"Exam Registeration Opened"}, status=status.HTTP_200_OK)
+        # sweetify.success(request, 'Examination Registeration Opened', button='Great!')
+        # return(HttpResponseRedirect(request.META['HTTP_REFERER']))
 
 @login_required
-def close_selected_exam(request, id):    
+def close_selected_exam(request, id, type):    
     exam_instance = School.objects.filter(id=id)
     for obj in exam_instance:
-        if 'admin/close_exam_reg' in request.path:
-            update_index = exam_instance.update(close_exam_reg=True, closed_exam_date=datetime.datetime.now())
-            sweetify.success(request, 'Indexing Closed', button='Great!')
+        if type == 'close':
+            exam_instance.update(close_exam_reg=True, closed_exam_date=datetime.datetime.now())
+            return Response({"message":"Exam Registeration Closed"}, status=status.HTTP_200_OK)
+            # sweetify.success(request, 'Indexing Closed', button='Great!')
 
-        else:
-            update_index = exam_instance.update(close_exam_reg=False, closed_exam_date=datetime.datetime.now())
-            sweetify.success(request, 'Indexing Opened', button='Great!')
+        elif type == 'open':
+            exam_instance.update(close_exam_reg=False, closed_exam_date=datetime.datetime.now())
+            return Response({"message":"Exam Registeration Opened"}, status=status.HTTP_200_OK)
         
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+        return Response({"message":"An error occured"}, status=status.HTTP_400_ERROR)
 
 # @login_required
 # def search_status(request):
