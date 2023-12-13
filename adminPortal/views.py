@@ -143,44 +143,37 @@ def delete_professional(request, id):
     user_instance.delete()
     return Response({"message": "Account deleted successfully"})
 
-@login_required
-def restriction(request, id):
+@api_view(['POST'])
+def restriction(request, id, restriction_type):
     
     try:    
         user_instance = User.objects.get(id=id)
-        if '/admin/block_user' in request.path :
+        if restriction_type == 'block':
             user_instance.block = True
             user_instance.save()
-            sweetify.success(request, 'School Blocked Successfully', button='Great!')
-            return HttpResponseRedirect(reverse('adminPortal:accredited_schools'))
+            return Response({"message":"User Blockeed Successfully"})
 
-        elif '/admin/unblock_user' in request.path :
+        elif restriction_type == 'unblock':
             user_instance.block = False
             user_instance.save()
-            sweetify.success(request, 'School Unblocked Successfully', button='Great!')
-            return HttpResponseRedirect(reverse('adminPortal:accredited_schools'))
+            return Response({"message":"User Unblocked Successfully"})
 
-        elif '/admin/suspend_user' in request.path:
+        elif restriction_type == 'suspend':
             user_instance.suspend = True
             user_instance.save()
-            sweetify.success(request, 'School Suspended Successfully', button='Great!')
-            return HttpResponseRedirect(reverse('adminPortal:accredited_schools'))
+            return Response({'message':'User Suspended Successfully'})
 
-        elif '/admin/unsuspend_user' in request.path :
+        elif restriction_type == 'unsuspend':
             user_instance.suspend = False
             user_instance.save()
-            sweetify.success(request, 'School Unsuspended Successfully', button='Great!')
-            return HttpResponseRedirect(reverse('adminPortal:accredited_schools'))
-
-        elif '/admin/delete_user' in request.path :
+            return Response({'message':'User Unsuspended Successfully'})
+            
+        elif restriction_type == 'delete' :
             user_instance.delete()
-            sweetify.success(request, 'School Deleted Successfully', button='Great!')
-            return HttpResponseRedirect(reverse('adminPortal:accredited_schools'))
-
+            return Response({'message':'User Deleted Successfully'})
       
     except User.DoesNotExist:
-        sweetify.error(request, 'School Blocked Successfully', button='Great!')
-        return HttpResponseRedirect(reverse('adminPortal:accredited_schools'))
+       return Response({"message": "User Doesn't Exist"})
 
 
 # Index List Method
@@ -217,7 +210,7 @@ def indexed_list(request, year):
     #     indexed_stu_list = paginator.page(1)
     # except EmptyPage:
     #     indexed_stu_list = paginator.page(paginator.num_pages)
-    context = {'indexed_stu_list': indexed_stu_list, 'all_schools':all_schools, 'year':year,  'limit':limit,'index_year':index_year,
+    context = {'indexed_stu_list': school_indexed, 'all_schools':all_schools, 'year':year,  'limit':limit,'index_year':index_year,
                 'approved_index': approved_index, 'declined_index': declined_index, 'index_state':index_state, 'access_status':access_status,}
     return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
 
@@ -246,6 +239,8 @@ def get_item(declined_index, key):
             return all_declined.get(key)
 
 # Exam List Method
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def exam_record(request, year):
     all_records = []
     exam_state= ''
@@ -276,7 +271,7 @@ def exam_record(request, year):
     #     all_school_record = paginator.page(1)
     # except EmptyPage:
     #     all_school_record = paginator(paginator.num_pages)
-    context =  {'all_school_record':all_school_record, 'all_records': all_records, 'limit':limit, 'exam_year':exam_year,
+    context =  {'all_school_record':all_schools, 'all_records': all_records, 'limit':limit, 'exam_year':exam_year,
     'approved_records': approved_records, 'declined_records': declined_records, 'year':year, 'exam_status':exam_status}
     return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
 
@@ -307,81 +302,93 @@ def get_item(declined_records, key):
 # End of Exam Limit Method
 
 # Indexing Limit Method 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def create_limit(request):
-    serializer = CreateLimitSerializer(data=request.data)
-    # form = createLimit(request.POST or None)
-    
-    if serializer.is_valid():
-        # form.save(commit=False)
-        # form.instance.school = school_instance.id
-        id = serializer.validated_data['school']
-        school_instance = School.objects.get(id=id)
-        serializer.save(school=school_instance.id)
-      
-        return Response({"message": "Index Limit Assigned"}, status=status.HTTP_200_OK)
-    else:
-        return Response({"message": "An error occured, Please contact admin "} , status=status.HTTP_400_ERROR)
-
-class UpdateIndexingLimit(UpdateAPIView):
-    serializer_class = CreateLimitSerializer
-    queryset = IndexLimit.objects.all()
-    permission_classes = [IsAuthenticated]
-       
 # @api_view(['POST'])
+# def create_limit(request, id, year):
+#     school_instance = School.objects.get(id=id)
+#     form = createLimit(request.POST or None)
+    
+#     if form.is_valid():
+#         form.save(commit=False)
+#         form.instance.school = school_instance.id
+#         form.instance.year = year
+#         form.save()
+#         sweetify.success(request, 'Index Limit Assigned', button='Great!')
+#         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#     else:
+#         sweetify.error(request, 'Invalid Value', button='Great!')
+#         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+
+# @api_view(['PATCH'])
 # @permission_classes([IsAuthenticated])
 # def reset_limit(request, id, year):
-#     serializer_class = CreateLimitSerializer(data=request.data)
-
-#     if serializer_class.is_valid():
-#         id = serializer_class.validated_data['school']
-#         school_instance = School.objects.get(id=id)
-#         sch_data = IndexLimit.objects.filter(school=school_instance.id, year=year).first()
-#         if sch_data:
-#             form = createLimit(request.POST or None, instance = sch_data) 
-#             if form.is_valid():
-#                 form.save()
-#                 sweetify.success(request, 'Updated Successfully', button='Great!')
-#                 return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-#             else:   
-#                 sweetify.error(request, 'Invalid Value', button='Great!')
-#                 return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#     school_instance = School.objects.get(id=id)
+#     sch_data = IndexLimit.objects.filter(school=school_instance.id, year=year).first()
+#     if sch_data:
+#         form = createLimit(request.POST or None, instance = sch_data) 
+#         if form.is_valid():
+#             form.save()
+#             sweetify.success(request, 'Updated Successfully', button='Great!')
+#             return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#         else:   
+#             sweetify.error(request, 'Invalid Value', button='Great!')
+#             return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#     else:
+#         form = createLimit(request.POST or None)
+#         if form.is_valid():
+#             form.save(commit=False)
+#             form.instance.school = school_instance.id
+#             form.instance.year = year
+#             form.save()
+#             sweetify.success(request, 'Index Limit Assigned', button='Great!')
+#             return(HttpResponseRedirect(request.META['HTTP_REFERER']))
 #         else:
-#             form = createLimit(request.POST or None)
-#             if form.is_valid():
-#                 form.save(commit=False)
-#                 form.instance.school = school_instance.id
-#                 form.instance.year = year
-#                 form.save()
-#                 sweetify.success(request, 'Index Limit Assigned', button='Great!')
-#                 return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-#             else:
-#                 sweetify.error(request, 'Invalid Value', button='Great!')
-#                 return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#             sweetify.error(request, 'Invalid Value', button='Great!')
+#             return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+
+
+class ResetLimitView(UpdateAPIView, CreateAPIView):
+    serializer_class = CreateLimitSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        school_instance = School.objects.get(id=self.kwargs['id'])
+        year = self.kwargs['year']
+        obj, created = IndexLimit.objects.get_or_create(school=school_instance, year=year)
+        return obj
+    
+    def perform_create(self, serializer):
+        school_instance = School.objects.get(id=self.kwargs['id'])
+        serializer.save(school=school_instance, year=self.kwargs['year'])
+
+    def get_success_message(self, created):
+        return "Index Limit Assigned" if created else "Limit Updated Successfully"
+    
+    def post(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        response_data = {'message':self.get_success_message(partial)}
+        return Response(response_data, status=200, headers=headers)
 
 # Exam Limit Method
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def create_limit(request):
-    serializer = CreateExamLimitSerializer(data=request.data)
-    # form = createLimit(request.POST or None)
-    
-    if serializer.is_valid():
-        # form.save(commit=False)
-        # form.instance.school = school_instance.id
-        id = serializer.validated_data['school']
-        school_instance = School.objects.get(id=id)
-        serializer.save(school=school_instance.id)
-      
-        return Response({"message": "Exam Limit Assigned"}, status=status.HTTP_200_OK)
-    else:
-        return Response({"message": "An error occured, Please contact admin "} , status=status.HTTP_400_ERROR)
-
-class UpdateExamLimit(UpdateAPIView):
-    serializer_class = CreateLimitSerializer
-    queryset = examLimit.objects.all()
-    permission_classes = [IsAuthenticated]
+# @login_required
+# def create_exam_limit(request, id, year):
+#     school_instance = School.objects.get(id=id)
+#     form = setExamLimit(request.POST or None)
+#     if form.is_valid():
+#         form.save(commit=False)
+#         form.instance.school = school_instance.id
+#         form.instance.year = year
+#         form.save()
+#         sweetify.success(request, 'Exam Limit Assigned', button='Great!')
+#         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+#     else:
+#         sweetify.error(request, 'Invalid Value', button='Great!')
+#         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
 
 # @login_required
 # def reset_exam_limit(request, id, year):
@@ -408,8 +415,36 @@ class UpdateExamLimit(UpdateAPIView):
 #         else:
 #             sweetify.error(request, 'Invalid Value', button='Great!')
 #             return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-    
 
+
+class ResetExamLimitView(UpdateAPIView, CreateAPIView):
+    serializer_class = CreateExamLimitSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        school_instance = School.objects.get(id=self.kwargs['id'])
+        year = self.kwargs['year']
+        obj, created = examLimit.objects.get_or_create(school=school_instance, year=year)
+        return obj
+    
+    def perform_create(self, serializer):
+        school_instance = School.objects.get(id=self.kwargs['id'])
+        serializer.save(school=school_instance, year=self.kwargs['year'])
+
+    def get_success_message(self, created):
+        return "Exam Limit Assigned" if created else "Limit Updated Successfully"
+    
+    def post(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        response_data = {'message':self.get_success_message(partial)}
+        return Response(response_data, status=200, headers=headers)
+    
 
 @login_required
 def reverse_submission(request, id):
