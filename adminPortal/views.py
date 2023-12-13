@@ -28,7 +28,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 
 
 class Dashboard(TemplateView):
@@ -42,41 +42,15 @@ def dashboard(request):
     total_sch_num = User.objects.filter(is_school=True).count()
     total_prof_num = User.objects.filter(is_professional=True).count()
     total_submited_index = Indexing.objects.filter(submitted=True).count() 
-    # indexing_notification = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Indexing') 
-    # | Q(ticket_status='Open') & Q(notification=False) & Q(department='Indexing') ).count()
-    # technical_notification = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Technical') 
-    # | Q(ticket_status='Open') & Q(notification=False) & Q(department='Technical') ).count()
-    # examination_notification = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Examination') 
-    # | Q(ticket_status='Open') & Q(notification=False) & Q(department='Examination') ).count()
-    # if 'admin/reset_notification' in request.path:
-    #     try:
-    #         indexing_notifications = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Indexing') 
-    #         | Q(ticket_status='Open') & Q(notification=False) & Q(department='Indexing') )
-    #         technical_notifications = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Technical') 
-    #         | Q(ticket_status='Open') & Q(notification=False) & Q(department='Technical') )
-    #         examination_notifications = Ticket.objects.filter(Q(ticket_status='School Reply') & Q(notification=False) & Q(department='Examination') 
-    #         | Q(ticket_status='Open') & Q(notification=False) & Q(department='Examination') )
-           
-    #         if indexing_notifications:
-    #             reset = indexing_notifications.update(notification=True)
-    #             return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
-    #         elif technical_notifications:
-    #             reset = technical_notifications.update(notification=True)
-    #             return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
-                
-    #         elif examination_notifications:
-    #             reset = examination_notifications.update(notification=True)
-    #             return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
 
-    #         elif not examination_notifications or technical_notifications or indexing_notifications:
-    #             sweetify.error(request, 'Notification is empty', button='Great!')
-    #             return HttpResponseRedirect(reverse('adminPortal:all_ticket'))
-    #     except:
-    #         pass
-           
-
-    context = {'all_school':all_school, 'total_sch_num':total_sch_num, 'total_submited_index':total_submited_index,
-    'total_prof_num':total_prof_num}
+    serialized_schools = UserSerializer(all_school, many=True).data
+ 
+    context = {
+        'all_school':serialized_schools, 
+        'total_sch_num':total_sch_num, 
+        'total_submited_index':total_submited_index,
+        'total_prof_num':total_prof_num
+    }
     return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
     
 
@@ -84,58 +58,37 @@ class AccreditedSchools(TemplateView):
     template_name = 'adminPortal/indexing.html'
 
 def school_index(request):
-    records = IndexLimit.objects.filter(used_limit__gte=0)
-    page = request.GET.get('page', 1)
-    paginator = Paginator(records, 10000)
-    try:
-        school_index_records = paginator.page(page)
-    except PageNotAnInteger:
-        school_index_records = paginator.page(1)
-    except EmptyPage:
-        school_index_records = paginator.page(paginator.num_pages)
+    records = IndexLimit.objects.filter(assigned_limit__gte=0)
+    # page = request.GET.get('page', 1)
+    # paginator = Paginator(records, 10000)
+    # try:
+    #     school_index_records = paginator.page(page)
+    # except PageNotAnInteger:
+    #     school_index_records = paginator.page(1)
+    # except EmptyPage:
+    #     school_index_records = paginator.page(paginator.num_pages)
 
-    return render (request, 'adminPortal/indexing.html', {'school_index_records': school_index_records})
+    return Response({'message': records}, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def accredited_schools(request):
     school_records = User.objects.filter(is_school=True).select_related('user')
+    serialized_school_records = UserSerializer(school_records, many=True).data
     accreditedCount = school_records.count()
 
-    context = {'schools':school_records, 'accreditedCount': accreditedCount}
+    context = {'schools':serialized_school_records, 'accreditedCount': accreditedCount}
 
     return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
    
-    # page = request.GET.get('page', 1)
-    # paginator = Paginator(school_records, 10000)
-
-    # try:
-    #     accredited_schools_record = paginator.page(page)
-    # except PageNotAnInteger:
-    #     accredited_schools_record = paginator.page(1)
-    # except EmptyPage:
-    #     accredited_schools_record = paginator.page(paginator.num_pages)
-    # return render (request, 'adminPortal/accredited.html', {'accredited_schools_record':accredited_schools_record, 'accreditedCount':accreditedCount})
-
-
+  
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def professionals(request):
     professional_records = Professional.objects.all().select_related('profuser')
 
     return Response({"data": professional_records, "message":"Request successful"}, status=status.HTTP_200_OK)
-    # page = request.GET.get('page', 1)
-    # paginator = Paginator(professional_records, 10000)
-
-    # try:
-    #     all_professional_records = paginator.page(page)
-    # except PageNotAnInteger:
-    #     all_professional_records = paginator.page(1)
-    # except EmptyPage:
-    #     all_professional_records = paginator.page(paginator.num_pages)
-
-    # return render (request, 'adminPortal/professionals.html', {'all_professional_records':all_professional_records})
-
+   
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def delete_professional(request, id):
@@ -189,8 +142,6 @@ def indexed_list(request, year):
     indexed = School.objects.all()
     access_status = closeIndexing.objects.get(id=1)
    
-    # page = request.GET.get('page', 1)
-    # paginator = Paginator(indexed, 30)
     for index_record in indexed:
         school_indexed = Indexing.objects.filter(institution_id=index_record.User_id, year=year).count()
         approved_index_count = Indexing.objects.filter(institution=index_record.User_id,  year=year, approved=True).count()
@@ -204,14 +155,8 @@ def indexed_list(request, year):
         approved_index.append({index_record.id:approved_index_count})
         declined_index.append({index_record.id:declined_index_count})
   
-    # try:
-    #     indexed_stu_list = paginator.page(page)
-    # except PageNotAnInteger:
-    #     indexed_stu_list = paginator.page(1)
-    # except EmptyPage:
-    #     indexed_stu_list = paginator.page(paginator.num_pages)
     context = {'indexed_stu_list': school_indexed, 'all_schools':all_schools, 'year':year,  'limit':limit,'index_year':index_year,
-                'approved_index': approved_index, 'declined_index': declined_index, 'index_state':index_state, 'access_status':access_status,}
+                'approved_index': approved_index, 'declined_index': declined_index, 'index_state':index_state, 'access_status':access_status.access,}
     return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
 
 @register.filter
@@ -249,6 +194,7 @@ def exam_record(request, year):
     limit = []
     exam_year = []
     all_schools = School.objects.all()
+    serialized_school_rec = SchoolSerializer(all_schools, many=True).data
     exam_status = closeExamRegistration.objects.get(id=1)
     for each_school in all_schools:
         total_exam_record = ExamRegistration.objects.filter(institute=each_school.User_id, year=year).count()
@@ -262,17 +208,8 @@ def exam_record(request, year):
             limit.append({each_school.id:sch_exam_limit.assigned_limit})
             exam_year.append({each_school.id:sch_exam_limit.year})
     
-    # page = request.GET.get('page', 1)
-    # paginator = Paginator(all_schools, 30)
-
-    # try:
-    #     all_school_record = paginator.page(page)
-    # except PageNotAnInteger:
-    #     all_school_record = paginator.page(1)
-    # except EmptyPage:
-    #     all_school_record = paginator(paginator.num_pages)
-    context =  {'all_school_record':all_schools, 'all_records': all_records, 'limit':limit, 'exam_year':exam_year,
-    'approved_records': approved_records, 'declined_records': declined_records, 'year':year, 'exam_status':exam_status}
+    context =  {'all_school_record':serialized_school_rec, 'all_records': all_records, 'limit':limit, 'exam_year':exam_year,
+    'approved_records': approved_records, 'declined_records': declined_records, 'year':year, 'exam_status':exam_status.access}
     return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
 
 @register.filter
