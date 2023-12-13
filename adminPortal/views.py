@@ -446,70 +446,95 @@ class ResetExamLimitView(UpdateAPIView, CreateAPIView):
         return Response(response_data, status=200, headers=headers)
     
 
-@login_required
-def reverse_submission(request, id):
+@api_view(['PATCH'])
+def reverse_index_submission(request, id):
     try:
-        if 'admin/reverse_index_record' in request.path:
-            school_instance = Indexing.objects.filter(institution_id=id, submitted=True)
-            none_sch_instances = Indexing.objects.filter(institution_id=id, submitted=False)
-            if school_instance:
-                school_instance.update(submitted=False, approved=False, unapproved=False)
-                sweetify.success(request, 'Reversed Successfully', button='Great!')
-            else:
-                sweetify.error(request, 'No Record to Reverse', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-        elif 'admin/reverse_exam_record/' in request.path:
-            school_instance = ExamRegistration.objects.filter(institute_id=id, submitted=True)
-            none_sch_instances = ExamRegistration.objects.filter(institute_id=id, submitted=False)
-            if school_instance:
-                school_instance.update(submitted=False, approved=False, declined=False)
-                sweetify.success(request, 'Reversed Successfully', button='Great!')
-            else:
-                sweetify.error(request, 'No Record to Reverse', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+        # if 'admin/reverse_index_record' in request.path:
+        school_instance = Indexing.objects.filter(institution_id=id, submitted=True)
+        # none_sch_instances = Indexing.objects.filter(institution_id=id, submitted=False)
+        if school_instance:
+            school_instance.update(submitted=False, approved=False, unapproved=False)
+            return Response({"message":"Submission Reversed Successfully"})
+            # sweetify.success(request, 'Reversed Successfully', button='Great!')
+        else:
+            return Response({"message":"An unexpected error occured"}, status=status.HTTP_400_ERROR)
+        # return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+    #     elif 'admin/reverse_exam_record/' in request.path:
+    #         school_instance = ExamRegistration.objects.filter(institute_id=id, submitted=True)
+    #         none_sch_instances = ExamRegistration.objects.filter(institute_id=id, submitted=False)
+    #         if school_instance:
+    #             school_instance.update(submitted=False, approved=False, declined=False)
+    #             sweetify.success(request, 'Reversed Successfully', button='Great!')
+    #         else:
+    #             sweetify.error(request, 'No Record to Reverse', button='Great!')
+    #         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
 
-        elif none_sch_instances:
-            sweetify.error(request, 'Record Hasn\'t been submitted', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+    #     elif none_sch_instances:
+    #         sweetify.error(request, 'Record Hasn\'t been submitted', button='Great!')
+    #         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
        
     except Indexing.DoesNotExist:
-        sweetify.error(request, 'Record Not Found', button='Great!')
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-
-@login_required
-def verification(request, id):
-    if 'admin/approve_index/' in request.path:
-        record = Indexing.objects.get(id=id, submitted=True)
-        record.approved = True
-        record.unapproved = False
-        record.comment = ''
-       
-        record.save()
-        sweetify.success(request, 'Approved Successfully', button='Great!')
-        return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+        # sweetify.error(request, 'Record Not Found', button='Great!')
+        return Response({"message":"Record Not Found"}, status=status.HTTP_404_NOT_FOUND)
     
-    elif 'admin/decline_index/' in request.path:
-        record = Indexing.objects.get(id=id, submitted=True)
-        form = UpdateIndexStatus(request.POST, instance=record)
-        if form.is_valid():
-            form.save()
-            sweetify.error(request, 'Declined Successfully', button='Great!')
-            return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def reverse_exam_submission(request, id):
+    try:
+        school_instance = ExamRegistration.objects.filter(institute_id=id, submitted=True)
+        if school_instance:
+            school_instance.update(submitted=False, approved=False, unapproved=False)
+            return Response({"message":"Submission Reversed Successfully"})
+        else:
+            return Response({"message":"An unexpected error occured"}, status=status.HTTP_400_ERROR)
+       
+    except Indexing.DoesNotExist:
+        return Response({"message":"Record Not Found"}, status=status.HTTP_404_NOT_FOUND)
 
-@login_required
-def sch_indexed_rec(request, id, year):
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def approve_index(request, id):
+    record = Indexing.objects.get(id=id, submitted=True)
+    record.approved = True
+    record.unapproved = False
+    record.comment = ''
+    
+    record.save()
+    return Response({"message":"Record Not Found"}, status=status.HTTP_200_OK)
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def decline_index(request, id):
+    record = Indexing.objects.get(id=id, submitted=True)
+    record.approved = False
+    record.unapproved = True
+    record.comment = ''
+    
+    record.save()
+    return Response({"message":"Index unapproved"}, status=status.HTTP_200_OK)
+    # elif 'admin/decline_index/' in request.path:
+    #     record = Indexing.objects.get(id=id, submitted=True)
+    #     form = UpdateIndexStatus(request.POST, instance=record)
+    #     if form.is_valid():
+    #         form.save()
+    #         sweetify.error(request, 'Declined Successfully', button='Great!')
+    #         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def sch_indexed_rec(request, id, year, type):
     sch_id = id
     record = ''
     declinedCount = ''
     indexedCount = ''
     approvedCount = ''
-    if 'admin/sch_indexed_rec/' in request.path:
+    if type == 'submitted':
         record = Indexing.objects.filter(institution_id=sch_id, submitted=True, year=year)
         indexedCount = record.count()
-    elif 'admin/approved_indexed_list/' in request.path:
+    elif type == 'approved':
         record = Indexing.objects.filter(institution_id=id, approved=True)
         approvedCount = record.count()
-    elif 'admin/declined_indexed_list/' in request.path:
+    elif type == 'unapproved':
         record = Indexing.objects.filter(institution_id=id, unapproved=True)
         declinedCount = record.count()
     else:
@@ -517,20 +542,20 @@ def sch_indexed_rec(request, id, year):
     school_id = School.objects.get(User_id=sch_id) 
     sch_name = User.objects.values_list('username',  flat=True).get(id=school_id.User_id)
   
-    page = request.GET.get('page', 1)
-    paginator = Paginator(record, 10000)
+    # page = request.GET.get('page', 1)
+    # paginator = Paginator(record, 10000)
 
-    try:
-        all_sch_records = paginator.page(page)
-    except PageNotAnInteger:
-        all_sch_records = paginator.page(1)
-    except EmptyPage:
-        all_sch_records = paginator.page(paginator.num_pages)
+    # try:
+    #     all_sch_records = paginator.page(page)
+    # except PageNotAnInteger:
+    #     all_sch_records = paginator.page(1)
+    # except EmptyPage:
+    #     all_sch_records = paginator.page(paginator.num_pages)
     context = {
-        'all_sch_records': all_sch_records, 'sch_name':sch_name, 'sch_id': sch_id, 'declinedCount':declinedCount,
+        'all_sch_records': record, 'sch_name':sch_name, 'sch_id': sch_id, 'declinedCount':declinedCount,
         'indexedCount':indexedCount, 'approvedCount':approvedCount
     }
-    return render(request, 'adminPortal/school_indexed_record.html', context)
+    return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
 
 class Exam(TemplateView):
     template_name = 'adminPortal/Examination_dept.html'
@@ -822,22 +847,22 @@ def close_selected_exam(request, id):
         
         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
 
-@login_required
-def search_status(request):
-    if request.method == "GET":
-        search_text = request.GET.get('search_text', None)
-    else:
-        search_text = ''
-    accredited_schools_record = User.objects.filter(is_school=True, username__icontains='sam').select_related('user')
-    return render(request, 'adminPortal/accredited.html', {'accredited_schools_record':accredited_schools_record})
+# @login_required
+# def search_status(request):
+#     if request.method == "GET":
+#         search_text = request.GET.get('search_text', None)
+#     else:
+#         search_text = ''
+#     accredited_schools_record = User.objects.filter(is_school=True, username__icontains='sam').select_related('user')
+#     return render(request, 'adminPortal/accredited.html', {'accredited_schools_record':accredited_schools_record})
 
-def ajax(request):
-    if request.method == "GET":
-        search_text = request.GET.get('search_text', None)
-    else:
-        search_text = ''
-    accredited_schools_record = serialize('json', User.objects.filter(is_school=True, username__icontains=search_text).select_related('user'))
-    return JsonResponse(accredited_schools_record, safe=False)
+# def ajax(request):
+#     if request.method == "GET":
+#         search_text = request.GET.get('search_text', None)
+#     else:
+#         search_text = ''
+#     accredited_schools_record = serialize('json', User.objects.filter(is_school=True, username__icontains=search_text).select_related('user'))
+#     return JsonResponse(accredited_schools_record, safe=False)
     
 @login_required
 def export_school(request):
