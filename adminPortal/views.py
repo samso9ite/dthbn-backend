@@ -42,6 +42,7 @@ def dashboard(request):
     total_sch_num = User.objects.filter(is_school=True).count()
     total_prof_num = User.objects.filter(is_professional=True).count()
     total_submited_index = Indexing.objects.filter(submitted=True).count() 
+    total_exam_reg = ExamRegistration.objects.filter(submitted=True).count()
 
     serialized_schools = UserSerializer(all_school, many=True).data
  
@@ -49,7 +50,8 @@ def dashboard(request):
         'all_school':serialized_schools, 
         'total_sch_num':total_sch_num, 
         'total_submited_index':total_submited_index,
-        'total_prof_num':total_prof_num
+        'total_prof_num':total_prof_num,
+        'total_exam_reg':total_exam_reg
     }
     return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
     
