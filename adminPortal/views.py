@@ -94,7 +94,7 @@ def delete_professional(request, id):
 
 @api_view(['POST'])
 def restriction(request, id, restriction_type):
-    
+    print(restriction_type)
     try:    
         user_instance = User.objects.get(id=id)
         if restriction_type == 'block':
