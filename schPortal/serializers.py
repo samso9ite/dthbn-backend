@@ -38,3 +38,8 @@ class examStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = closeExamRegistration
         fields = ("__all__")
+
+class schoolSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = School
+        fields = ("__all__")

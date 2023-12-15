@@ -264,3 +264,12 @@ def block(request, id):
         return Response({"message":"User Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
     return Response({"message":"User blocked successfully"}, status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def getUserAccount(request,params):
+    try:
+        user = User.objects.get(username=params)
+        serailized_data= userSerializer(user, many=False).data
+    except User.DoesNotExist:
+        return Response({"message:User Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({"message":"User Retrieved Successfully", "data":serailized_data}, status.HTTP_200_OK)

@@ -26,3 +26,4 @@ class SchoolSerializer(serializers.ModelSerializer):
     class Meta:
         model = School
         fields = "__all__"
+        depth = 1

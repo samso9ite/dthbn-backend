@@ -26,6 +26,7 @@ urlpatterns = [
         name='password_reset_complete'),
     path('logout/', views.logout_view, name="logout"),
     path('change_pwd/', views.change_pass_view, name="sch_pwd_reset"),
+    path('get_account/<str:params>', views.getUserAccount, name="get_account"),
     # path('adminPasswordReset/', views.change_password_view, name="adminPasswordReset"),
     # path('token/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
 ]

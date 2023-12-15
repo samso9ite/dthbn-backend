@@ -56,25 +56,19 @@ def dashboard(request):
     return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
     
 
-class AccreditedSchools(TemplateView):
-    template_name = 'adminPortal/indexing.html'
-
 def school_index(request):
     records = IndexLimit.objects.filter(assigned_limit__gte=0)
-    # page = request.GET.get('page', 1)
-    # paginator = Paginator(records, 10000)
-    # try:
-    #     school_index_records = paginator.page(page)
-    # except PageNotAnInteger:
-    #     school_index_records = paginator.page(1)
-    # except EmptyPage:
-    #     school_index_records = paginator.page(paginator.num_pages)
-
+  
     return Response({'message': records}, status=status.HTTP_200_OK)
+
+class AccreditedSchools(ListAPIView):
+    queryset = School.objects.all()
+    serializer_class = SchoolSerializer
+    permission_classes = [IsAuthenticated]
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def accredited_schools(request):
+def all_schools(request):
     school_records = User.objects.filter(is_school=True).select_related('user')
     serialized_school_records = UserSerializer(school_records, many=True).data
     accreditedCount = school_records.count()
@@ -129,7 +123,6 @@ def restriction(request, id, restriction_type):
       
     except User.DoesNotExist:
        return Response({"message": "User Doesn't Exist"})
-
 
 # Index List Method
 @api_view(['GET'])
