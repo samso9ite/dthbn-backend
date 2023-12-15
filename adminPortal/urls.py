@@ -84,7 +84,7 @@ urlpatterns = [
     path('submit_exam_verified/<int:id>', views.submit_exam_verified, name='submit_exam_verified'),
 
     #Professional Records
-    path('professionals/', views.professionals, name='professionals'),
+    path('all_professionals', views.professionals, name='professionals'),
     path('delete_professional/<int:id>', views.delete_professional, name='del_professionals'),
 
     path('export/xls/', views.export_school, name='export_school_xls'),

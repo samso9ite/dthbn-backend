@@ -20,10 +20,10 @@ from django.core.serializers import serialize
 from django.template.loader import render_to_string
 
 
-# API's Import
 # API's import 
 from rest_framework.generics import CreateAPIView, UpdateAPIView, ListAPIView, UpdateAPIView, RetrieveAPIView
 from .serializers import *
+from profPortal.serializers import professionalSerializer
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import status
@@ -81,9 +81,11 @@ def all_schools(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def professionals(request):
-    professional_records = Professional.objects.all().select_related('profuser')
+    professional_records = Professional.objects.all()
+    serialized_data = professionalSerializer(professional_records, many=True).data
+    print(serialized_data)
 
-    return Response({"data": professional_records, "message":"Request successful"}, status=status.HTTP_200_OK)
+    return Response({"data": serialized_data, "message":"Request successful"}, status=status.HTTP_200_OK)
    
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
