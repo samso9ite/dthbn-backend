@@ -131,8 +131,6 @@ def restriction(request, id, restriction_type):
 @permission_classes([IsAuthenticated])
 def indexed_list(request, year):
     all_schools = []
-    approved_index = []
-    declined_index = []
     limit = []
     index_year = []
     index_state = []
@@ -140,20 +138,23 @@ def indexed_list(request, year):
     access_status = closeIndexing.objects.get(id=1)
    
     for index_record in indexed:
+       
         school_indexed = Indexing.objects.filter(institution_id=index_record.User_id, year=year).count()
         approved_index_count = Indexing.objects.filter(institution=index_record.User_id,  year=year, approved=True).count()
         declined_index_count = Indexing.objects.filter(institution=index_record.User_id,  year=year, unapproved=True).count()
         sch_limit = IndexLimit.objects.filter(school=index_record.id, year=year)
+
         for sch_indexing_limit in sch_limit:
             limit.append({index_record.id:sch_indexing_limit.assigned_limit})
             index_year.append({index_record.id:sch_indexing_limit.year})
             
-        all_schools.append({index_record.id:school_indexed})
-        approved_index.append({index_record.id:approved_index_count})
-        declined_index.append({index_record.id:declined_index_count})
-  
-    context = {'indexed_stu_list': school_indexed, 'all_schools':all_schools, 'year':year,  'limit':limit,'index_year':index_year,
-                'approved_index': approved_index, 'declined_index': declined_index, 'index_state':index_state, 'access_status':access_status.access,}
+        all_schools.append({index_record.id:{'school':index_record.User.username, 
+                                            'index':school_indexed, 'approved':approved_index_count, 
+                                            'declined':declined_index_count, 
+                                            'limit':sch_indexing_limit.assigned_limit}}
+                            )
+       
+        context = {'all_schools':all_schools, 'year':year, 'access_status':access_status.access}
     return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
 
 @register.filter
@@ -162,23 +163,23 @@ def get_item(limit, index_year, key):
         if key in each_limit:
             return each_limit.get(key)
 
-@register.filter
-def get_item(all_schools, key):
-    for all_sch in all_schools:
-        if key in all_sch:
-            return all_sch.get(key)
+# @register.filter
+# def get_item(all_schools, key):
+#     for all_sch in all_schools:
+#         if key in all_sch:
+#             return all_sch.get(key)
 
-@register.filter
-def get_item( approved_index, key):
-    for all_approved in  approved_index:
-        if key in all_approved:
-            return all_approved.get(key)
+# @register.filter
+# def get_item( approved_index, key):
+#     for all_approved in  approved_index:
+#         if key in all_approved:
+#             return all_approved.get(key)
 
-@register.filter
-def get_item(declined_index, key):
-    for all_declined in declined_index:
-        if key in all_declined:
-            return all_declined.get(key)
+# @register.filter
+# def get_item(declined_index, key):
+#     for all_declined in declined_index:
+#         if key in all_declined:
+#             return all_declined.get(key)
 
 # Exam List Method
 @api_view(['GET'])
