@@ -133,12 +133,10 @@ def indexed_list(request, year):
     all_schools = []
     limit = []
     index_year = []
-    index_state = []
     indexed = School.objects.all()
     access_status = closeIndexing.objects.get(id=1)
    
     for index_record in indexed:
-       
         school_indexed = Indexing.objects.filter(institution_id=index_record.User_id, year=year).count()
         approved_index_count = Indexing.objects.filter(institution=index_record.User_id,  year=year, approved=True).count()
         declined_index_count = Indexing.objects.filter(institution=index_record.User_id,  year=year, unapproved=True).count()
@@ -148,10 +146,10 @@ def indexed_list(request, year):
             limit.append({index_record.id:sch_indexing_limit.assigned_limit})
             index_year.append({index_record.id:sch_indexing_limit.year})
             
-        all_schools.append({index_record.id:{'school':index_record.User.username, 
+        all_schools.append({'id':index_record.id, 'school':index_record.User.username, 
                                             'index':school_indexed, 'approved':approved_index_count, 
                                             'declined':declined_index_count, 
-                                            'limit':sch_indexing_limit.assigned_limit}}
+                                            'limit':sch_indexing_limit.assigned_limit}
                             )
        
         context = {'all_schools':all_schools, 'year':year, 'access_status':access_status.access}
@@ -186,7 +184,6 @@ def get_item(limit, index_year, key):
 @permission_classes([IsAuthenticated])
 def exam_record(request, year):
     all_records = []
-    exam_state= ''
     approved_records = []
     declined_records = []
     limit = []
