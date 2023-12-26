@@ -17,6 +17,7 @@ urlpatterns = [
     path('delete_user/<int:id>', views.restriction, name='delete_user'),
     path('indexed_list/<str:year>', views.indexed_list, name='indexed_list'),
     path('sch_indexed_rec/<id>/<str:year>/<str:type>', views.sch_indexed_rec, name='sch_indexed_rec'),
+    path('sch_exam_rec/<id>/<str:year>/<str:type>', views.sch_exam_rec, name='sch_exam_rec'),
     # path('approved_indexed_list/<int:id>/<str:year>', views.sch_indexed_rec, name='approved_indexed_list'),
     # path('declined_indexed_list/<int:id>/<str:year>', views.sch_indexed_rec, name='declined_indexed_list'),
     path('reverse_index_submission/<int:id>', views.reverse_index_submission, name='reverse_index'),

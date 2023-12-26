@@ -26,4 +26,4 @@ class UpdateIndexStatus(forms.ModelForm):
 class UpdateExamStatus(forms.ModelForm):
     class Meta:
         model = ExamRegistration
-        fields = ('approved', 'declined', 'comment')
+        fields = ('approved', 'unapproved', 'comment')

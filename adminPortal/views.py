@@ -28,7 +28,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from schPortal.serializers import indexingSerializer
+from schPortal.serializers import indexingSerializer, examSerializer
 # from django.contrib.auth.models import User
 
 
@@ -186,27 +186,61 @@ def exam_record(request, year):
     all_schools = []
     limit = []
     exam_year = []
-    all_schools = School.objects.all()
+    exams = School.objects.all()
     access_status = closeExamRegistration.objects.get(id=1)
    
-    for exam_record in all_schools:
+    for exam_record in exams:
         reg_exams = ExamRegistration.objects.filter(institute=exam_record.User_id, year=year).count()
-        approved_index_count = ExamRegistration.objects.filter(institute=exam_record.User_id,  year=year, approved=True).count()
-        declined_index_count = ExamRegistration.objects.filter(institute=exam_record.User_id,  year=year, approved=False).count()
-        sch_limit = IndexLimit.objects.filter(school=exam_record.id, year=year)
+        approved_exam_count = ExamRegistration.objects.filter(institute=exam_record.User_id,  year=year, approved=True).count()
+        declined_exam_count = ExamRegistration.objects.filter(institute=exam_record.User_id,  year=year, unapproved=True).count()
+        sch_limit = examLimit.objects.filter(school=exam_record.id, year=year)
 
-        for sch_indexing_limit in sch_limit:
-            limit.append({exam_record.id:sch_indexing_limit.assigned_limit})
-            exam_year.append({exam_record.id:sch_indexing_limit.year})
+        for sch_exam_limit in sch_limit:
+            limit.append({exam_record.id:sch_exam_limit.assigned_limit})
+            exam_year.append({exam_record.id:sch_exam_limit.year})
             
             all_schools.append({'id':exam_record.id, 'school_id':exam_record.User_id, 'school':exam_record.User.username, 
-                    'exams':reg_exams, 'approved':approved_index_count, 
-                    'declined':declined_index_count, 
-                    'limit':sch_indexing_limit.assigned_limit}
+                    'exams':reg_exams, 
+                    'approved':approved_exam_count, 
+                    'declined':declined_exam_count, 
+                    'limit':sch_exam_limit.assigned_limit
+                    }
                 )
        
         context = {'all_schools':all_schools, 'year':year, 'access_status':access_status.access}
     return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def sch_exam_rec(request, id, year, type):
+    sch_id = id
+    record = ''
+    declinedCount = ''
+    indexedCount = ''
+    approvedCount = ''
+    if type == 'submitted':
+        record = ExamRegistration.objects.filter(institute_id=sch_id, submitted=True, year=year)
+        serialized_exam_rec = examSerializer(record, many=True).data
+        # indexedCount = record.count()
+    elif type == 'approved':
+        record = ExamRegistration.objects.filter(institute_id=id, approved=True)
+        serialized_exam_rec = examSerializer(record, many=True).data
+        # approvedCount = record.count()
+    elif type == 'unapproved':
+        record = ExamRegistration.objects.filter(institute_id=id, unapproved=True)
+        serialized_exam_rec = examSerializer(record, many=True).data
+        # declinedCount = record.count()
+    else:
+        pass
+
+    context = {
+        'all_sch_records': serialized_exam_rec, 
+        # 'declinedCount':declinedCount,
+        # 'indexedCount':indexedCount,
+        # 'approvedCount':approvedCount
+    }
+    return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
+
 # @api_view(['GET'])
 # @permission_classes([IsAuthenticated])
 # def exam_record(request, year):
@@ -501,18 +535,7 @@ def sch_indexed_rec(request, id, year, type):
         declinedCount = record.count()
     else:
         pass
-    # school_id = School.objects.get(User_id=sch_id) 
-    # sch_name = User.objects.values_list('username',  flat=True).get(id=school_id.User_id)
-  
-    # page = request.GET.get('page', 1)
-    # paginator = Paginator(record, 10000)
 
-    # try:
-    #     all_sch_records = paginator.page(page)
-    # except PageNotAnInteger:
-    #     all_sch_records = paginator.page(1)
-    # except EmptyPage:
-    #     all_sch_records = paginator.page(paginator.num_pages)
     context = {
         'all_sch_records': serialized_index_rec, 'declinedCount':declinedCount,
         'indexedCount':indexedCount, 'approvedCount':approvedCount

@@ -174,7 +174,8 @@ class ExamRegistration(models.Model):
     gender = models.CharField(max_length=10, blank=True, null=True)
     submitted = models.BooleanField(default=False, blank=True)
     approved = models.BooleanField(default=False, blank=True)
-    declined = models.BooleanField(default=False, blank=True)
+
+    unapproved = models.BooleanField(default=False, blank=True)
     comment = models.CharField(max_length=500, blank=True, null=True)
 
 
