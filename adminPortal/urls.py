@@ -34,6 +34,7 @@ urlpatterns = [
     path('set_exam_limit/<int:id>/<str:year>', views.ResetExamLimitView.as_view, name="exam_limit"),
     path('exam', views.Exam.as_view()),
     path('exam_record/<str:year>', views.exam_record, name='exam_record'),
+    path('indexing_status/<str:id>', views.getIndexingStatus.as_view(), name="indexing_status"),
     # path('sch_exam_rec/<int:id>/<str:year>', views.exam_rec, name='sch_exam_rec'),
     # path('approved_exam_rec/<int:id>/<str:year>', views.exam_rec, name='approved_exam_rec'),
     # path('declined_exam_rec/<int:id>/<str:year>', views.exam_rec, name='declined_exam_rec'),
@@ -50,8 +51,8 @@ urlpatterns = [
     path('open_all_exam_reg/', views.close_exam, name='open_all_exam_reg'),
 
     path('close_index_reg/<int:id>', views.close_selected_index_reg, name='close_index_reg'),
-    path('close_all_index_reg/', views.close_index_registration, name='close_all_index_reg'),
-    path('open_all_index_reg/', views.close_index_registration, name='open_all_index_reg'),
+    path('index_reg_switch/<str:type>', views.close_index_registration, name='index_reg_switch'),
+    # path('open_all_index_reg/', views.close_index_registration, name='open_all_index_reg'),
     # path('open_exam_reg/<int:id>', views.open_selected_exam, name='open_exam_reg'),
     
     # Ticket Urls

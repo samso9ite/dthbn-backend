@@ -27,3 +27,9 @@ class SchoolSerializer(serializers.ModelSerializer):
         model = School
         fields = "__all__"
         depth = 1
+
+class indexStatusSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = closeIndexing
+        fields = "__all__"

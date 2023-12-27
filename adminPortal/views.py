@@ -493,7 +493,7 @@ def approve_index(request, id):
     record.comment = ''
     
     record.save()
-    return Response({"message":"Record Not Found"}, status=status.HTTP_200_OK)
+    return Response({"message":"Student Approved"}, status=status.HTTP_200_OK)
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -504,7 +504,7 @@ def decline_index(request, id):
     record.comment = ''
     
     record.save()
-    return Response({"message":"Index unapproved"}, status=status.HTTP_200_OK)
+    return Response({"message":"Student Declined"}, status=status.HTTP_200_OK)
     # elif 'admin/decline_index/' in request.path:
     #     record = Indexing.objects.get(id=id, submitted=True)
     #     form = UpdateIndexStatus(request.POST, instance=record)
@@ -544,6 +544,12 @@ def sch_indexed_rec(request, id, year, type):
 
 class Exam(TemplateView):
     template_name = 'adminPortal/Examination_dept.html'
+
+class getIndexingStatus(RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = closeIndexing.objects.all()
+    serializer_class =  indexStatusSerializer
+    lookup_field = 'id'
 
 
 
@@ -802,20 +808,19 @@ def close_exam(request):
             exam_instance.update(access=False, date=datetime.datetime.now())
         return Response({"message":"An error occured"}, status=status.HTTP_400_ERROR)
 
-@login_required
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def close_index_registration(request, type):
     if type == 'close' :
-        School.objects.update(close_index_reg=True, closed_index_date=datetime.datetime.now())
-        closeIndexing.objects.update(access=True) 
-        # sweetify.success(request, 'Indexing Closed', button='Great!')
-        return Response({"message":"Indexing Closed"}, status=status.HTTP_200_OK)
-    elif type == 'open':
+        print
         School.objects.update(close_index_reg=False, closed_index_date=datetime.datetime.now())
         closeIndexing.objects.update(access=False) 
+        return Response({"message":"Indexing Closed"}, status=status.HTTP_200_OK)
+    elif type == 'open':
+        School.objects.update(close_index_reg=True, closed_index_date=datetime.datetime.now())
+        closeIndexing.objects.update(access=True) 
         return Response({"message":"Indexing Opened"}, status=status.HTTP_200_OK)
-        # sweetify.success(request, 'Indexing Opened', button='Great!')
-        # return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-    
+      
 @login_required
 def close_selected_index_reg(request, id, type):
     index_instance = School.objects.filter(id=id)
@@ -837,15 +842,11 @@ def close_exam(request, type):
         School.objects.update(close_exam_reg=True, closed_exam_date=datetime.datetime.now())
         closeExamRegistration.objects.update(access=True) 
         return Response({"message":"Exam Registeration Closed"}, status=status.HTTP_200_OK)
-        # sweetify.success(request, 'Examination Registeration Closed', button='Great!')
-        # return(HttpResponseRedirect(request.META['HTTP_REFERER']))
     elif type == 'open':
         School.objects.update(close_exam_reg=False, closed_exam_date=datetime.datetime.now())
         closeExamRegistration.objects.update(access=False)
         return Response({"message":"Exam Registeration Opened"}, status=status.HTTP_200_OK)
-        # sweetify.success(request, 'Examination Registeration Opened', button='Great!')
-        # return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-
+   
 @login_required
 def close_selected_exam(request, id, type):    
     exam_instance = School.objects.filter(id=id)
