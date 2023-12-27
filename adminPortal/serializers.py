@@ -33,3 +33,9 @@ class indexStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = closeIndexing
         fields = "__all__"
+
+class declineIndexSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Indexing
+        fields = ('comment', 'approved', 'unapproved',)

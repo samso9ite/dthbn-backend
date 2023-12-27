@@ -29,7 +29,7 @@ urlpatterns = [
     # path('create_index_limit/<int:id>/<str:year>', views.create_limit, name='create_index_limit'),
 
     path('approve_index/<int:id>', views.approve_index, name="approve_index"),
-    path('decline_index/<int:id>', views.decline_index, name="decline_index"),
+    path('decline_indexing/<id>', views.DeclineIndexView.as_view(), name="decline_index"),
     path('set_index_limit/<int:id>/<str:year>', views.ResetLimitView.as_view, name="index_limit"),
     path('set_exam_limit/<int:id>/<str:year>', views.ResetExamLimitView.as_view, name="exam_limit"),
     path('exam', views.Exam.as_view()),

@@ -495,16 +495,22 @@ def approve_index(request, id):
     record.save()
     return Response({"message":"Student Approved"}, status=status.HTTP_200_OK)
 
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
-def decline_index(request, id):
-    record = Indexing.objects.get(id=id, submitted=True)
-    record.approved = False
-    record.unapproved = True
-    record.comment = ''
+class DeclineIndexView(UpdateAPIView):
+    queryset = Indexing.objects.all()
+    serializer_class = declineIndexSerializer 
+    permission_classes = [IsAuthenticated]  
+    lookup_field = 'id'
+
+# @api_view(['PATCH'])
+# @permission_classes([IsAuthenticated])
+# def decline_index(request, id):
+#     record = Indexing.objects.get(id=id, submitted=True)
+#     record.approved = False
+#     record.unapproved = True
+#     record.comment = ''
     
-    record.save()
-    return Response({"message":"Student Declined"}, status=status.HTTP_200_OK)
+#     record.save()
+#     return Response({"message":"Student unapproved"}, status=status.HTTP_200_OK)
     # elif 'admin/decline_index/' in request.path:
     #     record = Indexing.objects.get(id=id, submitted=True)
     #     form = UpdateIndexStatus(request.POST, instance=record)
