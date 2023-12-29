@@ -33,6 +33,12 @@ class indexStatusSerializer(serializers.ModelSerializer):
         model = closeIndexing
         fields = "__all__"
 
+class examStatusSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = closeExamRegistration
+        fields = "__all__"
+
 class declineIndexSerializer(serializers.ModelSerializer):
 
     class Meta:

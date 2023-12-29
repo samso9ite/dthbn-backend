@@ -527,6 +527,12 @@ class getIndexingStatus(RetrieveAPIView):
     serializer_class =  indexStatusSerializer
     lookup_field = 'id'
 
+class getExamStatus(RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = closeExamRegistration.objects.all()
+    serializer_class =  examStatusSerializer
+    lookup_field = 'id'
+
 
 
 # @api_view(['PATCH'])
@@ -788,8 +794,6 @@ def close_exam(request):
 @permission_classes([IsAuthenticated])
 def close_index_registration(request, type):
     if type == 'close' :
-        print
-        School.objects.update(close_index_reg=False, closed_index_date=datetime.datetime.now())
         closeIndexing.objects.update(access=False) 
         return Response({"message":"Indexing Closed"}, status=status.HTTP_200_OK)
     elif type == 'open':
@@ -812,15 +816,16 @@ def close_selected_index_reg(request, id, type):
 
 
 
-@login_required
-def close_exam(request, type):
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def close_exam_registeration(request, type):
     if type == 'close' :
-        School.objects.update(close_exam_reg=True, closed_exam_date=datetime.datetime.now())
-        closeExamRegistration.objects.update(access=True) 
+        School.objects.update(close_exam_reg=False, closed_exam_date=datetime.datetime.now())
+        closeExamRegistration.objects.update(access=False) 
         return Response({"message":"Exam Registeration Closed"}, status=status.HTTP_200_OK)
     elif type == 'open':
-        School.objects.update(close_exam_reg=False, closed_exam_date=datetime.datetime.now())
-        closeExamRegistration.objects.update(access=False)
+        School.objects.update(close_exam_reg=True, closed_exam_date=datetime.datetime.now())
+        closeExamRegistration.objects.update(access=True)
         return Response({"message":"Exam Registeration Opened"}, status=status.HTTP_200_OK)
    
 @login_required
