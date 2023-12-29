@@ -3,16 +3,13 @@ from authentication.models import User
 from schPortal.models import *
 
 # Create your models here.
-
-
 class IndexLimit(models.Model):
-    school = models.CharField(max_length=10)
-    assigned_limit = models.CharField(max_length=40)
-    year = models.CharField(max_length=10, blank=True, null=True) 
+    school = models.CharField(max_length=255)
+    assigned_limit = models.CharField(max_length=255)
+    year = models.CharField(max_length=50, blank=True, null=True) 
   
     def __str__(self):
         return self.assigned_limit
-
 
 class examLimit(models.Model):
     school = models.CharField(max_length=10)
@@ -21,7 +18,7 @@ class examLimit(models.Model):
   
     def __str__(self):
         return self.assigned_limit
-
+    
 class Restrictions(models.Model):
     User = models.ForeignKey(User, on_delete=models.CASCADE)
     block = models.BooleanField(default=False)

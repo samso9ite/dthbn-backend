@@ -6,9 +6,8 @@ from schPortal.models import School
 class CreateLimitSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model: IndexLimit
+        model = IndexLimit
         fields = "__all__"
-        # exclude: ('school' ,)
 
 class CreateExamLimitSerializer(serializers.ModelSerializer):
 

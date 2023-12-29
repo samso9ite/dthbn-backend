@@ -29,6 +29,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from schPortal.serializers import indexingSerializer, examSerializer
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 # from django.contrib.auth.models import User
 
 
@@ -338,24 +340,28 @@ def sch_exam_rec(request, id, year, type):
 #             sweetify.error(request, 'Invalid Value', button='Great!')
 #             return(HttpResponseRedirect(request.META['HTTP_REFERER']))
 
-
 class ResetLimitView(UpdateAPIView, CreateAPIView):
     serializer_class = CreateLimitSerializer
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        school_instance = School.objects.get(id=self.kwargs['id'])
+        school_instance = School.objects.get(User_id=self.kwargs['id'])
         year = self.kwargs['year']
-        obj, created = IndexLimit.objects.get_or_create(school=school_instance, year=year)
+        limit = self.kwargs['limit']
+        obj, created = IndexLimit.objects.get_or_create(school=school_instance.id, year=year)
         return obj
     
     def perform_create(self, serializer):
+        print("I am here now")
         school_instance = School.objects.get(id=self.kwargs['id'])
-        serializer.save(school=school_instance, year=self.kwargs['year'])
+        serializer.save(school=school_instance.id, year=self.kwargs['year'], assigned_limit=self.kwargs['limit'])
 
     def get_success_message(self, created):
         return "Index Limit Assigned" if created else "Limit Updated Successfully"
     
+    def perform_update(self, serializer):
+        serializer.save(assigned_limit=self.kwargs['limit']) 
+
     def post(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object
@@ -442,32 +448,14 @@ class ResetExamLimitView(UpdateAPIView, CreateAPIView):
 @api_view(['PATCH'])
 def reverse_index_submission(request, id):
     try:
-        # if 'admin/reverse_index_record' in request.path:
         school_instance = Indexing.objects.filter(institution_id=id, submitted=True)
-        # none_sch_instances = Indexing.objects.filter(institution_id=id, submitted=False)
+        print(school_instance)
         if school_instance:
             school_instance.update(submitted=False, approved=False, unapproved=False)
             return Response({"message":"Submission Reversed Successfully"})
-            # sweetify.success(request, 'Reversed Successfully', button='Great!')
         else:
-            return Response({"message":"An unexpected error occured"}, status=status.HTTP_400_ERROR)
-        # return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-    #     elif 'admin/reverse_exam_record/' in request.path:
-    #         school_instance = ExamRegistration.objects.filter(institute_id=id, submitted=True)
-    #         none_sch_instances = ExamRegistration.objects.filter(institute_id=id, submitted=False)
-    #         if school_instance:
-    #             school_instance.update(submitted=False, approved=False, declined=False)
-    #             sweetify.success(request, 'Reversed Successfully', button='Great!')
-    #         else:
-    #             sweetify.error(request, 'No Record to Reverse', button='Great!')
-    #         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-
-    #     elif none_sch_instances:
-    #         sweetify.error(request, 'Record Hasn\'t been submitted', button='Great!')
-    #         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
-       
+            return Response({"message":"Indexing hasn't been submitted"}, status=status.HTTP_400_BAD_REQUEST)
     except Indexing.DoesNotExist:
-        # sweetify.error(request, 'Record Not Found', button='Great!')
         return Response({"message":"Record Not Found"}, status=status.HTTP_404_NOT_FOUND)
     
 @api_view(['PATCH'])
@@ -479,7 +467,7 @@ def reverse_exam_submission(request, id):
             school_instance.update(submitted=False, approved=False, unapproved=False)
             return Response({"message":"Submission Reversed Successfully"})
         else:
-            return Response({"message":"An unexpected error occured"}, status=status.HTTP_400_ERROR)
+            return Response({"message":"An unexpected error occured"}, status=status.HTTP_400_BAD_REQUEST)
        
     except Indexing.DoesNotExist:
         return Response({"message":"Record Not Found"}, status=status.HTTP_404_NOT_FOUND)
@@ -500,24 +488,6 @@ class DeclineIndexView(UpdateAPIView):
     serializer_class = declineIndexSerializer 
     permission_classes = [IsAuthenticated]  
     lookup_field = 'id'
-
-# @api_view(['PATCH'])
-# @permission_classes([IsAuthenticated])
-# def decline_index(request, id):
-#     record = Indexing.objects.get(id=id, submitted=True)
-#     record.approved = False
-#     record.unapproved = True
-#     record.comment = ''
-    
-#     record.save()
-#     return Response({"message":"Student unapproved"}, status=status.HTTP_200_OK)
-    # elif 'admin/decline_index/' in request.path:
-    #     record = Indexing.objects.get(id=id, submitted=True)
-    #     form = UpdateIndexStatus(request.POST, instance=record)
-    #     if form.is_valid():
-    #         form.save()
-    #         sweetify.error(request, 'Declined Successfully', button='Great!')
-    #         return(HttpResponseRedirect(request.META['HTTP_REFERER']))
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -786,7 +756,7 @@ def submit_verified(request, id):
         return Response({"message":"Index Record Verified"}, status=status.HTTP_200_OK)
     else:
         # sweetify.error(request, 'Verified Index Already Submitted', button='Great!')
-        return Response({"message":"Verified Index Already Submitted"}, status=status.HTTP_400_ERROR)
+        return Response({"message":"Verified Index Already Submitted"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -799,7 +769,7 @@ def submit_exam_verified(request, id):
         return Response({"message":"Exam Record Verified"}, status=status.HTTP_200_OK)
     else: 
         # sweetify.error(request, 'Verified Record Already Submitted', button='Great!')
-        return Response({"message":"Verified Record Already Submitted"}, status=status.HTTP_400_ERROR)
+        return Response({"message":"Verified Record Already Submitted"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['PATCH'])
@@ -812,7 +782,7 @@ def close_exam(request):
             return Response({"message":"Indexing Closed"}, status=status.HTTP_200_OK)
         else:
             exam_instance.update(access=False, date=datetime.datetime.now())
-        return Response({"message":"An error occured"}, status=status.HTTP_400_ERROR)
+        return Response({"message":"An error occured"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -838,7 +808,7 @@ def close_selected_index_reg(request, id, type):
             index_instance.update(close_index_reg=False, closed_exam_date=datetime.datetime.now())
             return Response({"message":"Indexing Opened"}, status=status.HTTP_200_OK)
         
-        return Response({"message":"An error occured"}, status=status.HTTP_400_ERROR)
+        return Response({"message":"An error occured"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -866,7 +836,7 @@ def close_selected_exam(request, id, type):
             exam_instance.update(close_exam_reg=False, closed_exam_date=datetime.datetime.now())
             return Response({"message":"Exam Registeration Opened"}, status=status.HTTP_200_OK)
         
-        return Response({"message":"An error occured"}, status=status.HTTP_400_ERROR)
+        return Response({"message":"An error occured"}, status=status.HTTP_400_BAD_REQUEST)
 
 # @login_required
 # def search_status(request):
