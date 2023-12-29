@@ -12,7 +12,7 @@ class CreateLimitSerializer(serializers.ModelSerializer):
 class CreateExamLimitSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model: examLimit
+        model = examLimit
         fields = "__all__"
 
 class UserSerializer(serializers.ModelSerializer):
@@ -43,4 +43,10 @@ class declineIndexSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Indexing
+        fields = ('comment', 'approved', 'unapproved',)
+
+class declineExamSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ExamRegistration
         fields = ('comment', 'approved', 'unapproved',)

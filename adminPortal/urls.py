@@ -29,9 +29,11 @@ urlpatterns = [
     # path('create_index_limit/<int:id>/<str:year>', views.create_limit, name='create_index_limit'),
 
     path('approve_index/<int:id>', views.approve_index, name="approve_index"),
+    path('approve_exam/<int:id>', views.approve_exam, name="approve_exam"),
     path('decline_indexing/<id>', views.DeclineIndexView.as_view(), name="decline_index"),
+     path('decline_exam/<id>', views.DeclineExamView.as_view(), name="decline_exam"),
     path('set_index_limit/<int:id>/<str:year>/<int:limit>', views.ResetLimitView.as_view(), name="index_limit"),
-    path('set_exam_limit/<int:id>/<str:year>', views.ResetExamLimitView.as_view(), name="exam_limit"),
+    path('set_exam_limit/<int:id>/<str:year>/<int:limit>', views.ResetExamLimitView.as_view(), name="exam_limit"),
     path('exam', views.Exam.as_view()),
     path('exam_record/<str:year>', views.exam_record, name='exam_record'),
     path('indexing_status/<str:id>', views.getIndexingStatus.as_view(), name="indexing_status"),

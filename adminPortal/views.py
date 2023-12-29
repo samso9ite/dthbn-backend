@@ -347,12 +347,10 @@ class ResetLimitView(UpdateAPIView, CreateAPIView):
     def get_object(self):
         school_instance = School.objects.get(User_id=self.kwargs['id'])
         year = self.kwargs['year']
-        limit = self.kwargs['limit']
         obj, created = IndexLimit.objects.get_or_create(school=school_instance.id, year=year)
         return obj
     
     def perform_create(self, serializer):
-        print("I am here now")
         school_instance = School.objects.get(id=self.kwargs['id'])
         serializer.save(school=school_instance.id, year=self.kwargs['year'], assigned_limit=self.kwargs['limit'])
 
@@ -421,14 +419,17 @@ class ResetExamLimitView(UpdateAPIView, CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        school_instance = School.objects.get(id=self.kwargs['id'])
+        school_instance = School.objects.get(User_id=self.kwargs['id'])
         year = self.kwargs['year']
-        obj, created = examLimit.objects.get_or_create(school=school_instance, year=year)
+        obj, created = examLimit.objects.get_or_create(school=school_instance.id, year=year)
         return obj
     
     def perform_create(self, serializer):
         school_instance = School.objects.get(id=self.kwargs['id'])
-        serializer.save(school=school_instance, year=self.kwargs['year'])
+        serializer.save(school=school_instance.id, year=self.kwargs['year'], assigned_limit=self.kwargs['limit'])
+    
+    def perform_update(self, serializer):
+        serializer.save(assigned_limit=self.kwargs['limit']) 
 
     def get_success_message(self, created):
         return "Exam Limit Assigned" if created else "Limit Updated Successfully"
@@ -467,7 +468,7 @@ def reverse_exam_submission(request, id):
             school_instance.update(submitted=False, approved=False, unapproved=False)
             return Response({"message":"Submission Reversed Successfully"})
         else:
-            return Response({"message":"An unexpected error occured"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message":"Exam record hasn't been submitted"}, status=status.HTTP_400_BAD_REQUEST)
        
     except Indexing.DoesNotExist:
         return Response({"message":"Record Not Found"}, status=status.HTTP_404_NOT_FOUND)
@@ -564,18 +565,24 @@ def approve_exam(request, id):
     record.comment = ''
     
     record.save()
-    return Response({"message":"Record Not Found"}, status=status.HTTP_200_OK)
+    return Response({"message":"Exam Record Approved"}, status=status.HTTP_200_OK)
 
-@api_view(['PATCH'])
-@permission_classes([IsAuthenticated])
-def decline_exam(request, id):
-    record = ExamRegistration.objects.get(id=id, submitted=True)
-    record.approved = False
-    record.declined = True
-    record.comment = ''
+class DeclineExamView(UpdateAPIView):
+    queryset = ExamRegistration.objects.all()
+    serializer_class = declineExamSerializer 
+    permission_classes = [IsAuthenticated]  
+    lookup_field = 'id'
+
+# @api_view(['PATCH'])
+# @permission_classes([IsAuthenticated])
+# def decline_exam(request, id):
+#     record = ExamRegistration.objects.get(id=id, submitted=True)
+#     record.approved = False
+#     record.declined = True
+#     record.comment = ''
     
-    record.save()
-    return Response({"message":"Exam Registeration Declined"}, status=status.HTTP_200_OK)
+#     record.save()
+#     return Response({"message":"Exam Registeration Declined"}, status=status.HTTP_200_OK)
 
 # @api_view(['GET'])
 # @permission_classes([IsAuthenticated])
