@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from authentication.models import User
+from django.contrib.auth import authenticate
+
 
 class userSerializer(serializers.ModelSerializer):
    
@@ -23,3 +25,6 @@ class passwordResetSerializer(serializers.Serializer):
 
 class forgotPasswordSerializer(serializers.Serializer):
   email = serializers.EmailField(max_length=100)
+
+
+

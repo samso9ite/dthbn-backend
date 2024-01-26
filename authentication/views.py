@@ -1,7 +1,3 @@
-from django.shortcuts import render, redirect
-from django.views.generic import TemplateView, CreateView
-from authentication.forms import SignUp, ProfSignUp, LoginForm, ChangePasswordForm
-from django.http import HttpResponseRedirect
 from django.contrib.sites.shortcuts import get_current_site
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode
@@ -10,19 +6,12 @@ from authentication.tokens import account_activation_token
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import login, logout, authenticate, update_session_auth_hash
 from authentication.models import *
-from django.contrib import messages
-from django.http import HttpResponse, HttpResponseRedirect
-from schPortal import urls
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
-from django.urls import reverse
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from authentication.serializers import *
+from .serializers import *
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework.permissions import IsAuthenticated
 
@@ -113,9 +102,6 @@ def sign_up_view(request):
 #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-# class CustomTokenObtainPairView(TokenObtainPairView):
-#     serializer_class = loginSerializer
 
 class login_view(APIView):
     # authentication_classes = (TokenAuthentication,)  # Apply TokenAuthentication for this view
@@ -268,8 +254,11 @@ def block(request, id):
 @permission_classes([IsAuthenticated])
 def getUserAccount(request,params):
     try:
-        user = User.objects.get(username=params)
+        user = User.objects.get(email=params)
         serailized_data= userSerializer(user, many=False).data
     except User.DoesNotExist:
         return Response({"message:User Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
     return Response({"message":"User Retrieved Successfully", "data":serailized_data}, status.HTTP_200_OK)
+
+
+

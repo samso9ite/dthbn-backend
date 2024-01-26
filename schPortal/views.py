@@ -30,6 +30,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
+from base64 import b64decode
 
 
 class Pdf(View):
@@ -78,6 +80,8 @@ def Dashboard(request):
     if user.is_school:
         if user.profile_update:
             school_data = School.objects.get(User=user.id)
+            print(school_data.sch_logo)
+            school_logo_content = school_data.sch_logo.read() if school_data.sch_logo else None
             school = {
                 'id':user.id,
                 'sch_id': school_data.id,
@@ -86,7 +90,7 @@ def Dashboard(request):
                 'email': school_data.hod_email,
                 'hod_name': school_data.hod_name,
                 'sch_phone': school_data.phone_number,
-                # 'sch_logo': school_data.sch_logo,
+                # 'sch_logo': school_logo_content,
                 'state': school_data.state,
                 'region': school_data.region,
                 'hod_phone': school_data.hod_phone,
@@ -132,7 +136,6 @@ class NewIndexingView(CreateAPIView):
         # Indexing is open
         school_instance = School.objects.get(User_id=user_id)
         year = self.request.data.get('year')
-
         indexed = Indexing.objects.filter(institution_id=user_id, year=year).count()
         assigned = IndexLimit.objects.filter(school=school_instance.id, year=year).first()
         # Check if not assigned

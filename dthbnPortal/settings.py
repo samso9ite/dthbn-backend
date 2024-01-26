@@ -74,6 +74,12 @@ ROOT_URLCONF = 'dthbnPortal.urls'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), 
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'email',  # Use email as the user identifier
+    'USER_ID_CLAIM': 'email',
+    'AUTH_TOKEN_CLASSES': (
+        'rest_framework_simplejwt.tokens.AccessToken',
+    ),
 }
 
 TEMPLATES = [
@@ -177,7 +183,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # EMAIL_HOST = 'smtp.gmail.com'
 # EMAIL_PORT = '587'
 # EMAIL_HOST_USER = 'dthbngov@gmail.com'
-# EMAIL_HOST_PASSWORD = 'arrsgfhcfcpjibju'
+# EMAIL_HOST_PASSWORD = 'hwon fqvi wqsl vwyz'
 #EMAIL_USE_TLS =  True 
 # LOGIN_URL =
 

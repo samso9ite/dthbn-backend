@@ -7,7 +7,7 @@ from django.conf.urls.static import static
 app_name = 'schoolPortal'
 urlpatterns = [
     path('indexing/pdf/<slug:slug>', views.Pdf.as_view(), name='pdf_view'),
-    path('dashboard', views.Dashboard, name='dashboard'),
+    path('dashboard/', views.Dashboard, name='dashboard'),
     # path('update/(?P<pk>\d+)/edit/', views.AccountUpdate.as_view(), name="update"),
     path('profile_update/<int:pk>/', views.AccountUpdateView.as_view(), name="account_update"),
     path('schoolprofile/', views.SchoolProfile.as_view(), name='schoolProfile'),

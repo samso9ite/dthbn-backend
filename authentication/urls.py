@@ -5,11 +5,11 @@ from django.urls import re_path as url
 from . import views
 from django.contrib.auth.urls import views as auth_views
 
+
 app_name = 'Auth'
 
 urlpatterns = [
     path('sign_up', views.sign_up_view, name='Register'),
-    path('login', views.login_view.as_view(), name='Login'),
     #url(r'^account_activation_sent/$', views.account_activation_sent, name='account_activation_sent'),
     # url(r'^activate/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$', views.activate, name='activate'),
     path('activate',views.activate, name='activate-account'),
@@ -28,5 +28,4 @@ urlpatterns = [
     path('change_pwd/', views.change_pass_view, name="sch_pwd_reset"),
     path('get_account/<str:params>', views.getUserAccount, name="get_account"),
     # path('adminPasswordReset/', views.change_password_view, name="adminPasswordReset"),
-    # path('token/', views.CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
 ]

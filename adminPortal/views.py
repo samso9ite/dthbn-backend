@@ -143,17 +143,18 @@ def indexed_list(request, year):
         approved_index_count = Indexing.objects.filter(institution=index_record.User_id,  year=year, approved=True).count()
         declined_index_count = Indexing.objects.filter(institution=index_record.User_id,  year=year, unapproved=True).count()
         sch_limit = IndexLimit.objects.filter(school=index_record.id, year=year)
-
+    
+        school_limit = 0
         for sch_indexing_limit in sch_limit:
-            limit.append({index_record.id:sch_indexing_limit.assigned_limit})
-            index_year.append({index_record.id:sch_indexing_limit.year})
-            
-            all_schools.append({'id':index_record.id, 'school_id':index_record.User_id, 'school':index_record.User.username, 
-                    'index':school_indexed, 'approved':approved_index_count, 
-                    'declined':declined_index_count, 
-                    'limit':sch_indexing_limit.assigned_limit}
-                )
-       
+           school_limit = sch_indexing_limit.assigned_limit
+          #     index_year.append({index_record.id:sch_indexing_limit.year})
+        
+        all_schools.append({'id':index_record.id, 'school_id':index_record.User_id, 'school':index_record.User.username, 
+                'index':school_indexed, 'approved':approved_index_count, 
+                'declined':declined_index_count, 
+                'limit':school_limit
+            }
+        )
         context = {'all_schools':all_schools, 'year':year, 'access_status':access_status.access}
     return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
 

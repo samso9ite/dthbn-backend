@@ -17,6 +17,7 @@ class User(AbstractUser):
     ) 
     username = models.CharField(max_length=200, unique=True,null=True)
     code = models.CharField(max_length=50, blank=True)
+    email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
     programme = models.CharField(max_length=100, null=True)
     school_logo = models.FileField(upload_to='images/school/sch_logo', null=True)
@@ -30,6 +31,9 @@ class User(AbstractUser):
     is_indexing_staff = models.BooleanField(default=False)
     is_exam_staff = models.BooleanField(default=False)
     # professional = models.ForeignKey(Professional, on_delete=models.CASCADE, null=True )
+
+    USERNAME_FIELD = 'email'  # Set the email field as the username field
+    REQUIRED_FIELDS = [] 
     def email_user(self, *args, **kwargs):
         send_mail(
            '{}'.format(args[0]),
