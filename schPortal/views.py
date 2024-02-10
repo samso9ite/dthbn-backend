@@ -29,7 +29,6 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from base64 import b64decode
 
@@ -51,6 +50,23 @@ class Pdf(View):
             return Render.render('school/exam_pdf.html', context_dict)
 
 
+# class SchoolProfile(CreateAPIView):
+#     queryset = School.objects.all()
+#     serializer_class = schUpdateSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     # def create(self, request, *args, **kwargs):
+#     #     try:
+#     #         serializer = self.get_serializer(data=request.data)
+#     #         serializer.is_valid(raise_exception=True)
+#     #         self.perform_create(serializer)
+#     #         return Response({"message": "Profile Updated Successfully"}, status=status.HTTP_201_CREATED)
+#     #     except Exception as e:
+#     #         return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+#     def perform_create(self, serializer):
+#         serializer.save()  # This will create a new School instance
+
 class SchoolProfile(CreateAPIView):
     try:
         queryset = School.objects.all()
@@ -59,29 +75,30 @@ class SchoolProfile(CreateAPIView):
 
         def perform_create(self, serializer):
             user = self.request.user
-            # form.instance.User = user
             try:
                 user = User.objects.get(id=user.id)
                 user.profile_update = True
+                
                 user.save()
+                serializer.save(User=user)
                 return Response({"message": "Profile Updated Successfully"}, status= status.HTTP_200_OK)
             except user.DoesNotExist:
                 return Response({"message": "User doesn't exist"}, status= status.HTTP_400_BAD_REQUEST)
-            # return super().form_valid(form)
     except Exception as e:
-        print(e)
         raise e
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def Dashboard(request):
     user = request.user
+    print(user)
     school_data = ''
     if user.is_school:
         if user.profile_update:
             school_data = School.objects.get(User=user.id)
             print(school_data.sch_logo)
-            school_logo_content = school_data.sch_logo.read() if school_data.sch_logo else None
+            # school_logo_content = school_data.sch_logo.read() if school_data.sch_logo else None
             school = {
                 'id':user.id,
                 'sch_id': school_data.id,
@@ -90,7 +107,9 @@ def Dashboard(request):
                 'email': school_data.hod_email,
                 'hod_name': school_data.hod_name,
                 'sch_phone': school_data.phone_number,
-                # 'sch_logo': school_logo_content,
+                'sch_logo': "http://127.0.0.1:8000/media/"+str(school_data.sch_logo),
+                'profile_update': user.profile_update,
+                'postal_number': school_data.postal_number,
                 'state': school_data.state,
                 'region': school_data.region,
                 'hod_phone': school_data.hod_phone,
@@ -110,9 +129,23 @@ def Dashboard(request):
                 'current_exam_reg': current_exam_reg
             }
             return Response({"data": context, "message":"Request successful"}, status=status.HTTP_200_OK)
-    else:
-        return Response({"message": "User isn't a school"}, status=status.HTTP_400_BAD_REQUEST)
-    return Response({"message": "User isn't a school"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            school = {
+                'id':user.id,
+                'sch_name':user.username,
+                'email': user.email,
+                'profile_update': user.profile_update
+            }
+            context = {
+                'school_data': school,
+                'exam_reg_stud': '0',
+                'total_indexed': '0',
+                'notification': '0',
+                'current_indexing': '0',
+                'current_exam_reg': '0'
+            }
+            return Response({"data": context, "message": "Your profile hasn't been updated"}, status=status.HTTP_200_OK)
+    return Response({"message": "An unknown error occured"}, status=status.HTTP_404_NOT_FOUND)
 
  
 

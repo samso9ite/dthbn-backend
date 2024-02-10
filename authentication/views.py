@@ -60,49 +60,7 @@ def sign_up_view(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     else :
         return Response({"message": "Request not successful"}, status=status.HTTP_500_SERVER_ERROR)
-
-# @api_view(['POST'])
-# def login_view(request):
-#     if request.method == 'POST':
-#         serializer = loginSerializer(data=request.data)
-#         if serializer.is_valid():
-#             email = serializer.validated_data['email']
-#             password = serializer.validated_data['password']
-            
-#             try:
-#                 # Attempt to get the user by email
-#                 user = User.objects.get(email=email)
-#             except User.DoesNotExist:
-#                 # Handle the case where the user does not exist
-#                 return Response({"message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-            
-#             # Authenticate the user
-#             user = authenticate(username=user.username, password=password)
-            
-#             if user:
-#                 if user.is_active:
-#                     if not user.suspend and not user.block:
-#                         # Login the user
-#                         login(request, user)
-#                         refresh = RefreshToken.for_user(user)
-#                         data = {
-#                             'refresh' : str(refresh),
-#                             'access' : str(refresh.access_token)
-#                         }
-#                         return Response(data, status=status.HTTP_200_OK)
-#                     elif user.suspend:
-#                         return Response({"message": "School Has Been Suspended"}, status=status.HTTP_400_BAD_REQUEST)
-#                     elif user.block:
-#                         return Response({"message": "School Has Been Blocked"}, status=status.HTTP_400_BAD_REQUEST)
-#                 else:
-#                     return Response({"message": "User is not active"}, status=status.HTTP_400_BAD_REQUEST)
-#             else:
-#                 return Response({"message": "Invalid Username or Password"}, status=status.HTTP_401_UNAUTHORIZED)
-#         else:
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
 class login_view(APIView):
     # authentication_classes = (TokenAuthentication,)  # Apply TokenAuthentication for this view
 
@@ -136,6 +94,7 @@ class login_view(APIView):
             return Response({'error': 'Invalid username or password'}, status=status.HTTP_401_UNAUTHORIZED)
         
 @api_view(['POST'])
+# @csrf_exempt
 def activate(request):
     if request.method == 'POST':
         serializer = accountActivationSerializer(data=request.data)
@@ -145,23 +104,27 @@ def activate(request):
             try:
                 uid = force_str(urlsafe_base64_decode(uidb64))
                 user = User.objects.get(pk=uid)
+                if user is not None and account_activation_token.check_token(user, token):
+                    user.is_active = True
+                    user.reset = True
+                    if user.is_school:
+                        SchoolCode.objects.filter(reg_number=user.code).update(used=True, user_id=user.id)
+                        user.save()
+                        return Response({"message": "User activated"}, status=status.HTTP_201_CREATED)
+                    elif user.is_professional:
+                        ProfessionalCode.objects.filter(reg_number=user.code).update(used=True, user_id=user.id)
+                        user.save()
+                        return Response({"message": "User activated"}, status=status.HTTP_201_CREATED)
+                    else:
+                        return Response({"message": "Invalid user type"}, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({"message": "Invalid activation token"}, status=status.HTTP_400_BAD_REQUEST)
             except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-                user = None
-
-            if user is not None and account_activation_token.check_token(user, token):
-                user.is_active = True
-                user.reset = True
-                if user.is_school:
-                    SchoolCode.objects.filter(reg_number=user.code).update(used=True, user_id=user.id)
-                    user.save()
-                    return Response({"message": "User activated"}, status=status.HTTP_201_CREATED)
-                elif user.is_professional:
-                    ProfessionalCode.objects.filter(reg_number=user.code).update(used=True, user_id=user.id)
-                    user.save()
-                    # login(request, user)
-                    return Response({"message": "User activated"}, status=status.HTTP_201_CREATED)  
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"message": "An unknown error occurred, please contact support"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({"message": "Invalid request method"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 @api_view(['POST'])
 def logout_view(request):
