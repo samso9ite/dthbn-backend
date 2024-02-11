@@ -178,7 +178,7 @@ class NewIndexingView(CreateAPIView):
         assigned_quota = assigned.assigned_limit
 
         # Check if limit has been reached
-        if indexed != 0 and indexed == assigned_quota:
+        if int(indexed) is not 0 and int(indexed) >= int(assigned_quota):
             return Response({"message": "Limit has been reached"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Continue with the creation of the object
