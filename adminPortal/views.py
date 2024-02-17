@@ -147,7 +147,6 @@ def indexed_list(request, year):
         school_limit = 0
         for sch_indexing_limit in sch_limit:
            school_limit = sch_indexing_limit.assigned_limit
-          #     index_year.append({index_record.id:sch_indexing_limit.year})
         
         all_schools.append({'id':index_record.id, 'school_id':index_record.User_id, 'school':index_record.User.username, 
                 'index':school_indexed, 'approved':approved_index_count, 

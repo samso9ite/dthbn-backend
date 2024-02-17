@@ -26,9 +26,9 @@ def sign_up_view(request):
     serializer = userSerializer(data=request.data)
     if request.method == 'POST':
         if serializer.is_valid():
+            codeVar = serializer.validated_data['code']
             if serializer.validated_data['is_professional']:
                 programme = serializer.validated_data['programme']
-                codeVar = serializer.validated_data['code']
                 code = ''
                 if programme == 'Dental Therapist':
                     code = 'RDTH' + codeVar
@@ -39,6 +39,14 @@ def sign_up_view(request):
                 elif programme == 'Dental Surgery Technician':
                     code = 'RDST' + codeVar
                 username = code
+            elif serializer.validated_data['is_school']:
+                try:
+                    SchoolCode.objects.get(reg_number=codeVar)
+                    return Response({"message": "Registration number already registered"}, status=status.HTTP_400_BAD_REQUEST)
+                except SchoolCode.DoesNotExist:
+                    pass
+                else:
+                    return Response({"message": "Registration number doesn't match any of our record"}, status=status.HTTP_404_NOT_FOUND)
             password = serializer.validated_data['password']
             if serializer.validated_data['is_professional']:
                 user = serializer.save(code=code, is_active=False, username=username)
@@ -62,8 +70,6 @@ def sign_up_view(request):
         return Response({"message": "Request not successful"}, status=status.HTTP_500_SERVER_ERROR)
     
 class login_view(APIView):
-    # authentication_classes = (TokenAuthentication,)  # Apply TokenAuthentication for this view
-
     def post(self, request):
         serializer = loginSerializer(data=request.data)
         if serializer.is_valid():
@@ -83,10 +89,6 @@ class login_view(APIView):
         
         if user is not None:
             if user.is_active:
-                # try:
-                #     token = Token.objects.get(user=user)
-                # except Token.DoesNotExist:
-                #     token = Token.objects.create(user=user)
                 return user
             else:
                 return Response({'error': 'User is not active'}, status=status.HTTP_401_UNAUTHORIZED)
