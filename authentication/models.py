@@ -62,6 +62,7 @@ class ProfessionalCode(models.Model):
     used = models.BooleanField(default=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     cadre = models.CharField(max_length=30, null=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
     
 
 class Ticket(models.Model):

@@ -29,27 +29,28 @@ def sign_up_view(request):
             codeVar = serializer.validated_data['code']
             if serializer.validated_data['is_professional']:
                 programme = serializer.validated_data['programme']
-                code = ''
-                if programme == 'Dental Therapist':
-                    code = 'RDTH' + codeVar
-                elif programme == 'Dental Nurses':
-                    code = 'RDSN' + codeVar
-                elif programme == 'Dental Surgery Assistant':
-                    code = 'RDSA' + codeVar
-                elif programme == 'Dental Surgery Technician':
-                    code = 'RDST' + codeVar
-                username = code
+                # code = ''
+                # if programme == 'Dental Therapist':
+                #     code = 'DTH' + codeVar
+                # elif programme == 'Dental Surgery Assistant':
+                #     code = 'DTH' + codeVar
+                # elif programme == 'Dental Surgery Assistant':
+                #     code = 'DSA' + codeVar
+                # elif programme == 'Dental Surgery Technician':
+                #     code = 'RDST' + codeVar
+              
             elif serializer.validated_data['is_school']:
                 try:
-                    SchoolCode.objects.get(reg_number=codeVar)
-                    return Response({"message": "Registration number already registered"}, status=status.HTTP_400_BAD_REQUEST)
+                    code = SchoolCode.objects.get(reg_number=codeVar)
+                    if code.used is True:
+                        return Response({"message": "Registration number already registered"}, status=status.HTTP_400_BAD_REQUEST)
+                   
                 except SchoolCode.DoesNotExist:
-                    pass
-                else:
                     return Response({"message": "Registration number doesn't match any of our record"}, status=status.HTTP_404_NOT_FOUND)
+                    
             password = serializer.validated_data['password']
             if serializer.validated_data['is_professional']:
-                user = serializer.save(code=code, is_active=False, username=username)
+                user = serializer.save(code=codeVar, is_active=False)
             else:
                user = serializer.save(is_active=False) 
             user.set_password(password)
@@ -220,10 +221,19 @@ def block(request, id):
 def getUserAccount(request,params):
     try:
         user = User.objects.get(email=params)
-        serailized_data= userSerializer(user, many=False).data
+        serailized_data = userSerializer(user, many=False).data
     except User.DoesNotExist:
-        return Response({"message:User Doesn't Exist"}, status=status.HTTP_400_BAD_REQUEST)
-    return Response({"message":"User Retrieved Successfully", "data":serailized_data}, status.HTTP_200_OK)
+        return Response({"message:User Doesn't Exist"}, status=status.HTTP_404_NOT_FOUND)
+    return Response({"message":"User Retrieved Successfully", "data":serailized_data}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def verifyUserCode(request, code):
+    try:
+        prof = ProfessionalCode.objects.get(reg_number=code)
+        serialized_data = profCodeSerializer(prof, many=False).data
+    except ProfessionalCode.DoesNotExist:
+        return Response({"message":"User Not Found"}, status=status.HTTP_404_NOT_FOUND)
+    return Response({"message":"User Retrieved", "data":serialized_data}, status=status.HTTP_200_OK)
 
 
 

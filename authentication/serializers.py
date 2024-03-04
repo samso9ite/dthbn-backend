@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from authentication.models import User
+from authentication.models import User, ProfessionalCode
 from django.contrib.auth import authenticate
 
 
@@ -8,6 +8,11 @@ class userSerializer(serializers.ModelSerializer):
   class Meta:
         model = User
         fields = "__all__"
+
+class profCodeSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = ProfessionalCode
+      fields = "__all__"
 
 class loginSerializer(serializers.ModelSerializer):
 
