@@ -1,8 +1,5 @@
 from django.db import models
 from authentication.models import User
-from cities_light.models import Region
-from cities_light.models import Country
-from schPortal.models import LGA
 
 # Create your models here.
 class Professional(models.Model):
@@ -14,21 +11,21 @@ class Professional(models.Model):
     middle_name = models.CharField(max_length=200, blank=True, null=True)
     telephone = models.CharField(max_length=200, blank=True, null=True)
     email = models.EmailField(max_length=200, blank=True, null=True)
-    state = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True)
+    state = models.CharField(max_length=100,  null=True, blank=True)
     postal_address = models.CharField(max_length=200, blank=True, null=True)
     religion = models.CharField(max_length=200, blank=True, null=True)
-    residential_country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True)
-    residential_state = models.ForeignKey(Region, on_delete=models.SET_NULL, blank=True, null=True, related_name='prof_residential_state_new')
-    residential_lga = models.ForeignKey(LGA, on_delete=models.SET_NULL,blank=True, null=True)
+    residential_country = models.CharField(max_length=100,  blank=True, null=True)
+    residential_state = models.CharField(max_length=100,  blank=True, null=True)
+    residential_lga = models.CharField(max_length=100, blank=True, null=True)
     residential_address = models.CharField(max_length=200, blank= True, null=True)
     marital_status = models.CharField(max_length=200, blank=True, null=True)
     maiden_name = models.CharField(max_length=200, blank=True, null=True)
-    state_of_origin = models.ForeignKey(Region, on_delete=models.SET_NULL, blank=True, null=True, related_name='prof_state_of_origin_new')
-    lga_state = models.ForeignKey(LGA,on_delete=models.SET_NULL, blank=True, null=True, related_name='prof_lga_state_new') 
+    state_of_origin = models.CharField(max_length=100,  blank=True, null=True)
+    lga_state = models.CharField(max_length=100, blank=True, null=True) 
     senatorial_district = models.CharField(max_length=200, blank=True, null=True)
     date_of_birth = models.CharField(max_length=30, blank=True, null=True)
-    state_of_birth = models.ForeignKey(Region,on_delete=models.SET_NULL, blank=True, null=True, related_name='prof_state_of_birth_new')
-    lga_of_birth = models.ForeignKey(LGA,on_delete=models.SET_NULL, blank=True, null=True, related_name='prof_lga_of_birth_new')
+    state_of_birth = models.CharField(max_length=100, blank=True, null=True)
+    lga_of_birth = models.CharField(max_length=100, blank=True, null=True)
     qualification1 = models.CharField(max_length=200, blank=True, null=True)     
     qualification2 = models.CharField(max_length=200, blank=True, null=True)     
     qualification3 = models.CharField(max_length=200, blank=True, null=True) 
@@ -43,15 +40,15 @@ class Professional(models.Model):
     office_name = models.CharField(max_length=100, blank=True, null=True)
     office_address = models.CharField(max_length=100, blank=True, null=True)
     sector = models.CharField(max_length=100, blank=True, null=True)
-    office_country = models.ForeignKey(Country,on_delete=models.SET_NULL, blank=True, null=True, related_name='prof_officeCountry_new')
-    office_state =  models.ForeignKey(Region,on_delete=models.SET_NULL, blank=True, null=True, related_name='prof_officeState_new')
-    office_lga = models.ForeignKey(LGA,on_delete=models.SET_NULL, blank=True, null=True, related_name='prof_officeLga_new')
+    office_country = models.CharField(max_length=100, blank=True, null=True)
+    office_state =  models.CharField(max_length=100, blank=True, null=True)
+    office_lga = models.CharField(max_length=100, blank=True, null=True)
     office_phone = models.CharField(max_length=100, blank=True, null=True)
     office_email = models.EmailField(blank=True, null=True)
     updated =models.BooleanField(default=False)
    
-    state_of_origin =  models.ForeignKey(Region, on_delete=models.SET_NULL, blank=True, null=True, related_name='prof_state_of_origin_new')
-    lga_of_origin = models.ForeignKey(LGA, on_delete=models.SET_NULL, blank=True, null=True, related_name='prof_lgaOrigin_new')
+    state_of_origin =  models.CharField(max_length=100,  blank=True, null=True)
+    lga_of_origin = models.CharField(max_length=100,  blank=True, null=True)
     
     gender = models.CharField(max_length=10, blank=True, null=True)
 

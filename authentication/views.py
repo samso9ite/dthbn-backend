@@ -43,8 +43,7 @@ def sign_up_view(request):
                 try:
                     code = SchoolCode.objects.get(reg_number=codeVar)
                     if code.used is True:
-                        return Response({"message": "Registration number already registered"}, status=status.HTTP_400_BAD_REQUEST)
-                   
+                        return Response({"message": "License number already used"}, status=status.HTTP_400_BAD_REQUEST)
                 except SchoolCode.DoesNotExist:
                     return Response({"message": "Registration number doesn't match any of our record"}, status=status.HTTP_404_NOT_FOUND)
                     

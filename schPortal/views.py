@@ -92,12 +92,10 @@ class SchoolProfile(CreateAPIView):
 @permission_classes([IsAuthenticated])
 def Dashboard(request):
     user = request.user
-    print(user)
     school_data = ''
     if user.is_school:
         if user.profile_update:
             school_data = School.objects.get(User=user.id)
-            print(school_data.sch_logo)
             # school_logo_content = school_data.sch_logo.read() if school_data.sch_logo else None
             school = {
                 'id':user.id,
@@ -211,14 +209,11 @@ class ExamRegView(CreateAPIView):
         school_instance = School.objects.get(User_id=user_id)
         year = self.request.data.get('year')
         exam_record = ExamRegistration.objects.filter(institute_id=user_id, year=year).count()
-        print(school_instance.id)
         assigned_quota =  examLimit.objects.values_list('assigned_limit', flat=True).get(school=school_instance.id, year=year)
         # Check if not assigned
         if not assigned_quota:
             return Response({"message": "Contact the board, Limit hasn't been set"}, status=status.HTTP_400_BAD_REQUEST)
-
         
-
         # Check if limit has been reached
         if exam_record != 0 and exam_record == assigned_quota:
             return Response({"message": "Limit has been reached"}, status=status.HTTP_400_BAD_REQUEST)
