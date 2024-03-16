@@ -1,6 +1,7 @@
 from django.db import models
 from authentication.models import User
 from schPortal.models import *
+from profPortal.models import Professional
 
 # Create your models here.
 class IndexLimit(models.Model):
@@ -31,4 +32,12 @@ class closeIndexing(models.Model):
 class closeExamRegistration(models.Model):
     access = models.BooleanField(default=False)
     date = models.DateTimeField(auto_now=True)
-    
+
+class licenseModel(models.Model):
+    prof = models.ForeignKey(Professional, on_delete=models.CASCADE, related_name='license', default="null")
+    renewal_date = models.DateField()
+    expiry_date = models.DateField()
+    status = models.CharField(max_length=50)
+    certificate = models.FileField(upload_to='images/license', null=True)
+
+     

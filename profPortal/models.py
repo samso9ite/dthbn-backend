@@ -2,8 +2,9 @@ from django.db import models
 from authentication.models import User
 
 # Create your models here.
+
 class Professional(models.Model):
-    profuser = models.ForeignKey(User,  on_delete=models.CASCADE, related_name='profuser')
+    profuser = models.ForeignKey(User,  on_delete=models.CASCADE, related_name='profs')
     profile_image = models.ImageField(upload_to='images/professional/prof_profile_img', null=True, blank=True)
     title = models.CharField(max_length=200, blank=True, null=True)
     first_name = models.CharField(max_length=200, blank=True, null=True)
@@ -11,7 +12,6 @@ class Professional(models.Model):
     middle_name = models.CharField(max_length=200, blank=True, null=True)
     telephone = models.CharField(max_length=200, blank=True, null=True)
     email = models.EmailField(max_length=200, blank=True, null=True)
-    state = models.CharField(max_length=100,  null=True, blank=True)
     postal_address = models.CharField(max_length=200, blank=True, null=True)
     religion = models.CharField(max_length=200, blank=True, null=True)
     residential_country = models.CharField(max_length=100,  blank=True, null=True)
@@ -51,5 +51,4 @@ class Professional(models.Model):
     lga_of_origin = models.CharField(max_length=100,  blank=True, null=True)
     
     gender = models.CharField(max_length=10, blank=True, null=True)
-
 

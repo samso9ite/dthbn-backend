@@ -27,7 +27,7 @@ urlpatterns = [
     path('api/auth/', include('authentication.urls')),
     path('api/school/', include('schPortal.urls')),
     path('api/admin/', include('adminPortal.urls')),
-    path('professional/', include('profPortal.urls')),
+    path('api/professional/', include('profPortal.urls')),
     path('admin/', include('adminPortal.urls')),
     path('mailMarketing/', include('email_marketing.urls')),
    ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
