@@ -34,7 +34,7 @@ class closeExamRegistration(models.Model):
     date = models.DateTimeField(auto_now=True)
 
 class licenseModel(models.Model):
-    prof = models.ForeignKey(Professional, on_delete=models.CASCADE, related_name='license', default="null")
+    prof = models.ForeignKey(User, on_delete=models.CASCADE, related_name='license', default="null")
     renewal_date = models.DateField()
     expiry_date = models.DateField()
     status = models.CharField(max_length=50)
