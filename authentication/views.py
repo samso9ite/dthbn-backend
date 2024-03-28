@@ -20,6 +20,7 @@ from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import authenticate
+from profPortal.models import Professional
 
 @api_view(['POST'])
 def sign_up_view(request):
@@ -43,18 +44,31 @@ def sign_up_view(request):
                 try:
                     code = SchoolCode.objects.get(reg_number=codeVar)
                     if code.used is True:
-                        return Response({"message": "License number already used"}, status=status.HTTP_400_BAD_REQUEST)
+                        return Response({"message": "Registration number already used"}, status=status.HTTP_400_BAD_REQUEST)
                 except SchoolCode.DoesNotExist:
                     return Response({"message": "Registration number doesn't match any of our record"}, status=status.HTTP_404_NOT_FOUND)
                     
             password = serializer.validated_data['password']
             if serializer.validated_data['is_professional']:
-                user = serializer.save(code=codeVar, is_active=False)
+                first_name=serializer.validated_data['first_name'] 
+                last_name=serializer.validated_data['last_name']
+                middle_name=serializer.validated_data['middle_name']
+                try:
+                    code = ProfessionalCode.objects.get(reg_number=codeVar)
+                    if code.used is True:
+                        return Response({"message": "License number already used"}, status=status.HTTP_400_BAD_REQUEST)
+                except ProfessionalCode.DoesNotExist:
+                    return Response({"message": "License number doesn't match any of our record"}, status=status.HTTP_404_NOT_FOUND)
+                user = serializer.save(code=codeVar, is_active=False, username=last_name+" "+first_name+" "+middle_name)
             else:
                user = serializer.save(is_active=False) 
             user.set_password(password)
             user.save()
-
+            Professional.objects.create(profuser=user, 
+                                        first_name=first_name, 
+                                        surname=last_name,
+                                        middle_name=middle_name
+                                        )
             current_site = get_current_site(request)
             subject = 'Account Activation Link'
             message = render_to_string('auth/account_activation_email.html', {

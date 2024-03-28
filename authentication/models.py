@@ -16,6 +16,7 @@ class User(AbstractUser):
         ('Dental Nurses', 'Dental Nurses'),
     ) 
     username = models.CharField(max_length=200, unique=True,null=True)
+    middle_name = models.CharField(max_length=100, blank="True", null="True")
     code = models.CharField(max_length=50, blank=True)
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
@@ -43,12 +44,12 @@ class User(AbstractUser):
            fail_silently=False,
            html_message=args[1]   )
 
-class Professional(models.Model):
-    User = models.OneToOneField(User, on_delete=models.CASCADE)
-    first_name = models.CharField(max_length=300, blank=True)
-    middle_name = models.CharField(max_length=300, blank=True)
-    last_name = models.CharField(max_length=300, blank=True)
-    licence_due_date = models.DateField()
+# class Professional(models.Model):
+#     User = models.OneToOneField(User, on_delete=models.CASCADE)
+#     first_name = models.CharField(max_length=300, blank=True)
+#     middle_name = models.CharField(max_length=300, blank=True)
+#     last_name = models.CharField(max_length=300, blank=True)
+#     licence_due_date = models.DateField()
 
 
 class SchoolCode(models.Model):
@@ -62,7 +63,9 @@ class ProfessionalCode(models.Model):
     used = models.BooleanField(default=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     cadre = models.CharField(max_length=30, null=True)
-    name = models.CharField(max_length=100, null=True, blank=True)
+    first_name = models.CharField(max_length=100, null=True, blank=True)
+    middle_name = models.CharField(max_length=100, null=True, blank=True)
+    last_name = models.CharField(max_length=100, null=True, blank=True)
     
 
 class Ticket(models.Model):

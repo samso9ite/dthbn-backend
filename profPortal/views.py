@@ -19,7 +19,7 @@ class UpdateProfileView(UpdateAPIView):
     queryset = Professional.objects.all()
     serializer_class = professionalSerializer 
     permission_classes = [IsAuthenticated]  
-    lookup_field = 'id'
+    lookup_field = 'profuser_id'
 
 class AddProfessionalView(CreateAPIView):
     queryset = Professional.objects.all()
@@ -41,16 +41,12 @@ class ListLicenseView(ListAPIView):
 @permission_classes([IsAuthenticated])
 def profDashboard(request):
     user=request.user
-    print(user)
     if user.is_professional:
-        print(user)
         if user.is_active:
-            print("I'm here now")
             license = licenseModel.objects.filter(prof_id=user.id)
             serialized_license = licenseSerializer(license, many=True).data
             serialized_user = userSerializer(user).data
             license_count = license.count()
-            print(license_count)
             context = {
                 'license':serialized_license,
                 'license_count': license_count,

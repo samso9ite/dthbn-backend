@@ -484,7 +484,6 @@ def close_selected_exam(request, id, type):
             return Response({"message":"Exam Registeration Opened"}, status=status.HTTP_200_OK)
         
         return Response({"message":"An error occured"}, status=status.HTTP_400_BAD_REQUEST)
-
 class AddLicense(CreateAPIView):
     queryset = licenseModel.objects.all()
     serializer_class = licenseSerializer

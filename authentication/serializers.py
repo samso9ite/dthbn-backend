@@ -9,6 +9,13 @@ class userSerializer(serializers.ModelSerializer):
         model = User
         fields = "__all__"
 
+# class profSignUpSerializer(serializers.Serializer):
+#   first_name = serializers.CharField(max_length=50)
+#   last_name = serializers.CharField(max_length="50")
+#   surname = serializers.CharField(max_length="50")
+#   email = serializers.EmailField()
+#   password = serializers.CharField(max_leg)
+
 class profCodeSerializer(serializers.ModelSerializer):
    class Meta:
       model = ProfessionalCode
