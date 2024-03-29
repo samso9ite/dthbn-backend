@@ -49,3 +49,4 @@ class licenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = licenseModel
         fields = "__all__"
+        depth = 1
