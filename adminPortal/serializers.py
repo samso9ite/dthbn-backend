@@ -50,3 +50,9 @@ class licenseSerializer(serializers.ModelSerializer):
         model = licenseModel
         fields = "__all__"
         depth = 1
+
+class createLicenseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = licenseModel
+        fields = ("prof", "renewal_date", "expiry_date", "status", "certificate")
+     
