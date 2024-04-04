@@ -30,16 +30,12 @@ def sign_up_view(request):
             codeVar = serializer.validated_data['code']
             if serializer.validated_data['is_professional']:
                 programme = serializer.validated_data['programme']
-                # code = ''
-                # if programme == 'Dental Therapist':
-                #     code = 'DTH' + codeVar
-                # elif programme == 'Dental Surgery Assistant':
+                code = ''
+                # if programme == 'Dental Therapist/Officer':
                 #     code = 'DTH' + codeVar
                 # elif programme == 'Dental Surgery Assistant':
                 #     code = 'DSA' + codeVar
-                # elif programme == 'Dental Surgery Technician':
-                #     code = 'RDST' + codeVar
-              
+               
             elif serializer.validated_data['is_school']:
                 try:
                     code = SchoolCode.objects.get(reg_number=codeVar)
@@ -59,6 +55,10 @@ def sign_up_view(request):
                         return Response({"message": "License number already used"}, status=status.HTTP_400_BAD_REQUEST)
                 except ProfessionalCode.DoesNotExist:
                     return Response({"message": "License number doesn't match any of our record"}, status=status.HTTP_404_NOT_FOUND)
+                if programme == 'Dental Therapist/Officer':
+                    codeVar = 'DTH' + codeVar
+                elif programme == 'Dental Surgery Assistant':
+                    codeVar = 'DSA' + codeVar
                 user = serializer.save(code=codeVar, is_active=False, username=last_name+" "+first_name+" "+middle_name)
             else:
                user = serializer.save(is_active=False) 
