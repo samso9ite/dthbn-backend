@@ -9,4 +9,5 @@ urlpatterns = [
     path('get-profile/<int:profuser>', views.RetrieveProfView.as_view(), name='get-profile'),
     path('list-license/<int:profuser_id>', views.ListLicenseView.as_view(), name="list_license"),
     path('dashboard', views.profDashboard, name="prof_dashboard"),
+    path('verify-license/<license_id>/', views.verifyLicense, name="verify_license"),
 ] 

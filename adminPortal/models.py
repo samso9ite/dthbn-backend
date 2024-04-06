@@ -39,5 +39,6 @@ class licenseModel(models.Model):
     expiry_date = models.DateField()
     status = models.CharField(max_length=50)
     certificate = models.FileField(upload_to='images/license', null=True)
+    created_date = models.DateTimeField(auto_now_add = True)
 
      

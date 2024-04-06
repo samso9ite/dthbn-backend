@@ -13,6 +13,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from authentication.serializers import userSerializer
+from authentication.models import User
 
 # Create your views here
 class UpdateProfileView(UpdateAPIView):
@@ -53,4 +54,14 @@ def profDashboard(request):
                 'user':serialized_user
             }
             return Response({"data": context, "message": "Request Successfull"}, status=status.HTTP_200_OK)
+    return Response({"message": "User not Professional"}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['GET'])
+def verifyLicense(request, license_id):
+    user = User.objects.filter(code=license_id)
+    if user.exists():
+        user = user.first()
+        license = licenseModel.objects.filter(prof_id=user.id).order_by('-created_date').first()
+        license = licenseSerializer(license).data
+        return Response({"data": license, "message": "License Retrived Successfully"}, status=status.HTTP_200_OK)
     return Response({"message": "User not Professional"}, status=status.HTTP_404_NOT_FOUND)
