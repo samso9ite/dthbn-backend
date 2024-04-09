@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from authentication.serializers import userSerializer
 from authentication.models import User
+from django.shortcuts import get_object_or_404
 
 # Create your views here
 class UpdateProfileView(UpdateAPIView):
@@ -58,10 +59,13 @@ def profDashboard(request):
 
 @api_view(['GET'])
 def verifyLicense(request, license_id):
-    user = User.objects.filter(code=license_id)
-    if user.exists():
-        user = user.first()
-        license = licenseModel.objects.filter(prof_id=user.id).order_by('-created_date').first()
-        license = licenseSerializer(license).data
-        return Response({"data": license, "message": "License Retrived Successfully"}, status=status.HTTP_200_OK)
-    return Response({"message": "User not Professional"}, status=status.HTTP_404_NOT_FOUND)
+    user = get_object_or_404(User, code=license_id)
+    license = licenseModel.objects.filter(prof_id=user.id).order_by('-created_date').last()
+    profDetails = Professional.objects.filter(profuser_id=user.id)
+    details = professionalSerializer(profDetails, many=True).data
+    license_data = licenseSerializer(license).data
+    context = {
+        "license": license_data,
+        "profDetails": details
+    }
+    return Response({"data": context, "message": "License Retrieved Successfully"}, status=status.HTTP_200_OK)

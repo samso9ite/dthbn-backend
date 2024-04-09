@@ -5,3 +5,8 @@ class professionalSerializer(serializers.ModelSerializer):
     class Meta:
         model=Professional
         fields= "__all__"
+
+class professionalDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Professional
+        exclude= ["profuser"]
