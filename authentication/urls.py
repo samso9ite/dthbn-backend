@@ -27,6 +27,6 @@ urlpatterns = [
     path('logout/', views.logout_view, name="logout"),
     path('change_pwd/', views.change_pass_view, name="sch_pwd_reset"),
     path('get_account/<str:params>', views.getUserAccount, name="get_account"),
-    path('verify_prof_code/<str:code>', views.verifyUserCode, name="verify_prof_code"),
+    path('verify_prof_code/<str:code>/<str:programme>', views.verifyUserCode, name="verify_prof_code"),
     # path('adminPasswordReset/', views.change_password_view, name="adminPasswordReset"),
 ]

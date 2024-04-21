@@ -45,7 +45,7 @@ class Professional(models.Model):
     office_lga = models.CharField(max_length=100, blank=True, null=True)
     office_phone = models.CharField(max_length=100, blank=True, null=True)
     office_email = models.EmailField(blank=True, null=True)
-    updated =models.BooleanField(default=False)
+    updated = models.BooleanField(default=False)
    
     state_of_origin =  models.CharField(max_length=100,  blank=True, null=True)
     lga_of_origin = models.CharField(max_length=100,  blank=True, null=True)

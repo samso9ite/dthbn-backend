@@ -58,8 +58,14 @@ def profDashboard(request):
     return Response({"message": "User not Professional"}, status=status.HTTP_404_NOT_FOUND)
 
 @api_view(['GET'])
-def verifyLicense(request, license_id):
-    user = get_object_or_404(User, code=license_id)
+def verifyLicense(request, license_id, programme):
+    print(license_id, programme)
+    if programme == 'Dental Therapist-Officer':
+        codeVar = 'DTH' + license_id
+        print(codeVar)
+    elif programme == 'Dental Surgery Assistant':
+        codeVar = 'DSA' + license_id
+    user = get_object_or_404(User, code=codeVar)
     license = licenseModel.objects.filter(prof_id=user.id).order_by('-created_date').last()
     profDetails = Professional.objects.filter(profuser_id=user.id)
     details = professionalSerializer(profDetails, many=True).data

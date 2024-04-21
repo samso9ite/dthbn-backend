@@ -55,7 +55,7 @@ def sign_up_view(request):
                         return Response({"message": "License number already used"}, status=status.HTTP_400_BAD_REQUEST)
                 except ProfessionalCode.DoesNotExist:
                     return Response({"message": "License number doesn't match any of our record"}, status=status.HTTP_404_NOT_FOUND)
-                if programme == 'Dental Therapist/Officer':
+                if programme == 'Dental Therapist-Officer':
                     codeVar = 'DTH' + codeVar
                 elif programme == 'Dental Surgery Assistant':
                     codeVar = 'DSA' + codeVar
@@ -240,9 +240,11 @@ def getUserAccount(request,params):
     return Response({"message":"User Retrieved Successfully", "data":serailized_data}, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-def verifyUserCode(request, code):
+def verifyUserCode(request, code, programme):
+    print(programme)
     try:
-        prof = ProfessionalCode.objects.get(reg_number=code)
+        prof = ProfessionalCode.objects.get(reg_number=code, cadre=programme)
+        print(prof)
         serialized_data = profCodeSerializer(prof, many=False).data
     except ProfessionalCode.DoesNotExist:
         return Response({"message":"User Not Found"}, status=status.HTTP_404_NOT_FOUND)
