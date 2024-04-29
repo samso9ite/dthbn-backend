@@ -4,7 +4,7 @@ from authentication.models import User
 # Create your models here.
 
 class Professional(models.Model):
-    profuser = models.ForeignKey(User,  on_delete=models.CASCADE, related_name='profs')
+    profuser = models.ForeignKey(User, on_delete=models.CASCADE, related_name='profs', blank=True)
     profile_image = models.ImageField(upload_to='images/professional/prof_profile_img', null=True, blank=True)
     title = models.CharField(max_length=200, blank=True, null=True)
     first_name = models.CharField(max_length=200, blank=True, null=True)

@@ -48,7 +48,12 @@ def sign_up_view(request):
             if serializer.validated_data['is_professional']:
                 first_name=serializer.validated_data['first_name'] 
                 last_name=serializer.validated_data['last_name']
-                middle_name=serializer.validated_data['middle_name']
+                if 'middle_name' in serializer.validated_data:
+                    middle_name=serializer.validated_data['middle_name']
+                    username = last_name+" "+first_name+" "+middle_name
+                else: 
+                    middle_name = None
+                    username = last_name+" "+first_name
                 try:
                     code = ProfessionalCode.objects.get(reg_number=codeVar)
                     if code.used is True:
@@ -59,7 +64,8 @@ def sign_up_view(request):
                     codeVar = 'DTH' + codeVar
                 elif programme == 'Dental Surgery Assistant':
                     codeVar = 'DSA' + codeVar
-                user = serializer.save(code=codeVar, is_active=False, username=last_name+" "+first_name+" "+middle_name)
+                
+                user = serializer.save(code=codeVar, is_active=False, username=username)
             else:
                user = serializer.save(is_active=False) 
             user.set_password(password)
@@ -128,7 +134,8 @@ def activate(request):
                         user.save()
                         return Response({"message": "User activated"}, status=status.HTTP_201_CREATED)
                     elif user.is_professional:
-                        ProfessionalCode.objects.filter(reg_number=user.code).update(used=True, user_id=user.id)
+                        code =  user.code[3:]
+                        ProfessionalCode.objects.filter(reg_number=code).update(used=True, user_id=user.id)
                         user.save()
                         return Response({"message": "User activated"}, status=status.HTTP_201_CREATED)
                     else:
