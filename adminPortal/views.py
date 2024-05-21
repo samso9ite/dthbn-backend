@@ -399,11 +399,8 @@ def submit_verified(request, id):
     
     if user_instance:
         user_instance.update(verified=True)
-        # sweetify.success(request, 'Verified Index Submitted', button='Great!')
-        # return HttpResponseRedirect(reverse('adminPortal:sch_indexed_rec', kwargs={'id':id}))
         return Response({"message":"Index Record Verified"}, status=status.HTTP_200_OK)
     else:
-        # sweetify.error(request, 'Verified Index Already Submitted', button='Great!')
         return Response({"message":"Verified Index Already Submitted"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PATCH'])
@@ -413,10 +410,8 @@ def submit_exam_verified(request, id):
     
     if user_instance:
         user_instance.update(verified=True)
-        # sweetify.success(request, 'Verified Record Submitted', button='Great!')
         return Response({"message":"Exam Record Verified"}, status=status.HTTP_200_OK)
     else: 
-        # sweetify.error(request, 'Verified Record Already Submitted', button='Great!')
         return Response({"message":"Verified Record Already Submitted"}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -447,7 +442,7 @@ def close_index_registration(request, type):
 def close_selected_index_reg(request, id, type):
     index_instance = School.objects.filter(id=id)
     for obj in index_instance:
-        if type == 'close':
+        if  type == 'close':
             index_instance.update(close_index_reg=True, closed_exam_date=datetime.datetime.now())
             return Response({"message":"Indexing Closed"}, status=status.HTTP_200_OK)
         elif type == open:
@@ -471,14 +466,13 @@ def close_exam_registeration(request, type):
         return Response({"message":"Exam Registeration Opened"}, status=status.HTTP_200_OK)
    
 @login_required
-def close_selected_exam(request, id, type):    
+def close_selected_exam(id, type):    
     exam_instance = School.objects.filter(id=id)
     for obj in exam_instance:
         if type == 'close':
             exam_instance.update(close_exam_reg=True, closed_exam_date=datetime.datetime.now())
             return Response({"message":"Exam Registeration Closed"}, status=status.HTTP_200_OK)
-            # sweetify.success(request, 'Indexing Closed', button='Great!')
-
+            
         elif type == 'open':
             exam_instance.update(close_exam_reg=False, closed_exam_date=datetime.datetime.now())
             return Response({"message":"Exam Registeration Opened"}, status=status.HTTP_200_OK)
@@ -489,7 +483,6 @@ class AddLicense(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        print(serializer)
         serializer.save()
 
 class UpdateLicense(UpdateAPIView):
@@ -499,10 +492,14 @@ class UpdateLicense(UpdateAPIView):
     permission_classes = [IsAuthenticated]
 
 class ListLicenseView(ListAPIView):
-    queryset = licenseModel.objects.all()
     serializer_class = licenseSerializer
-    lookup_field = 'id'
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        prof_id = self.kwargs.get('id')
+        if prof_id:
+            return licenseModel.objects.filter(prof_id=prof_id)
+        return licenseModel.objects.all()
     
 @login_required
 def export_school(request):
