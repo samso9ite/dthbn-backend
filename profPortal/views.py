@@ -39,6 +39,23 @@ class ListLicenseView(ListAPIView):
     permission_classes = [IsAuthenticated]
     lookup_field = 'id'
 
+
+class UpdateLicenseReceiptView(UpdateAPIView):
+    queryset = LicenseReceipt.objects.all()
+    serializer_class = licenseReceiptSerializer 
+    permission_classes = [IsAuthenticated]  
+    lookup_field = 'id'
+
+class AddLicenseReceiptView(CreateAPIView):
+    queryset = LicenseReceipt.objects.all()
+    serializer_class = licenseSerializer
+
+class ListLicenseReceiptView(ListAPIView):
+    queryset = LicenseReceipt.objects.all()
+    serializer_class = licenseReceiptSerializer
+    permission_classes = [IsAuthenticated]
+    # lookup_field = 'profuser'
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def profDashboard(request):
@@ -59,11 +76,8 @@ def profDashboard(request):
 
 @api_view(['GET'])
 def verifyLicense(request, license_id, programme):
-    print(license_id, programme)
     if programme == 'Dental Therapist-Officer':
         codeVar = 'DTH' + license_id
-        print(codeVar)
-    elif programme == 'Dental Surgery Assistant':
         codeVar = 'DSA' + license_id
     user = get_object_or_404(User, code=codeVar)
     license = licenseModel.objects.filter(prof_id=user.id).order_by('-created_date').last()

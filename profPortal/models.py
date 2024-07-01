@@ -1,5 +1,6 @@
 from django.db import models
 from authentication.models import User
+import uuid
 
 # Create your models here.
 
@@ -52,3 +53,10 @@ class Professional(models.Model):
     
     gender = models.CharField(max_length=10, blank=True, null=True)
 
+class LicenseReceipt(models.Model):
+    profuser = models.ForeignKey(User, on_delete=models.CASCADE, related_name='professional_receipt', blank=True)
+    reference = models.CharField(default=uuid.uuid4, editable=False, max_length=250)
+    status = models.CharField(max_length=50, default="Pending Review")
+    remita_number = models.CharField(max_length=100, blank=True, null=True)
+    license_proof = models.FileField(upload_to='images/license', null=True)
+    created_date = models.DateTimeField(auto_now_add = True)
