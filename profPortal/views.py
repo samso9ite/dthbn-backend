@@ -40,19 +40,20 @@ class ListLicenseView(ListAPIView):
     lookup_field = 'id'
 
 
-class UpdateLicenseReceiptView(UpdateAPIView):
-    queryset = LicenseReceipt.objects.all()
-    serializer_class = licenseReceiptSerializer 
+class UpdateReceiptView(UpdateAPIView):
+    queryset = ReceiptModel.objects.all()
+    serializer_class = ReceiptSerializer 
     permission_classes = [IsAuthenticated]  
     lookup_field = 'id'
 
-class AddLicenseReceiptView(CreateAPIView):
-    queryset = LicenseReceipt.objects.all()
-    serializer_class = licenseSerializer
+class AddReceiptView(CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = ReceiptModel.objects.all()
+    serializer_class = ReceiptSerializer
 
-class ListLicenseReceiptView(ListAPIView):
-    queryset = LicenseReceipt.objects.all()
-    serializer_class = licenseReceiptSerializer
+class ListReceiptView(ListAPIView):
+    queryset = ReceiptModel.objects.all()
+    serializer_class = ReceiptSerializer
     permission_classes = [IsAuthenticated]
     # lookup_field = 'profuser'
 

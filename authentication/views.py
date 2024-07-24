@@ -55,7 +55,7 @@ def sign_up_view(request):
                     middle_name = None
                     username = last_name+" "+first_name
                 try:
-                    code = ProfessionalCode.objects.get(reg_number=codeVar)
+                    code = ProfessionalCode.objects.get(reg_number=codeVar, cadre=programme)
                     if code.used is True:
                         return Response({"message": "License number already used"}, status=status.HTTP_400_BAD_REQUEST)
                 except ProfessionalCode.DoesNotExist:
@@ -171,7 +171,6 @@ def forgot_password(request):
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.id))
             current_site = get_current_site(request)
-            print(current_site)
             subject = 'Account Password Reset Link'
             message = render_to_string('auth/password_reset_email.html', {
                 'user': user,
@@ -248,10 +247,8 @@ def getUserAccount(request,params):
 
 @api_view(['GET'])
 def verifyUserCode(request, code, programme):
-    print(programme)
     try:
         prof = ProfessionalCode.objects.get(reg_number=code, cadre=programme)
-        print(prof)
         serialized_data = profCodeSerializer(prof, many=False).data
     except ProfessionalCode.DoesNotExist:
         return Response({"message":"User Not Found"}, status=status.HTTP_404_NOT_FOUND)
