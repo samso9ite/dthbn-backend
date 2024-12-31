@@ -7,9 +7,8 @@ class professionalSerializer(serializers.ModelSerializer):
         fields= "__all__"
         depth = 1
 
-class ReceiptSerializer(serializers.ModelSerializer):
+class licenseReceiptSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ReceiptModel
+        model = LicenseReceipt
         fields = "__all__"
-        # depth = 1
-        
+       # depth = 1

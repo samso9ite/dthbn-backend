@@ -16,6 +16,7 @@ from authentication.serializers import userSerializer
 from authentication.models import User
 from django.shortcuts import get_object_or_404
 
+
 # Create your views here
 class UpdateProfileView(UpdateAPIView):
     queryset = Professional.objects.all()
@@ -39,24 +40,6 @@ class ListLicenseView(ListAPIView):
     permission_classes = [IsAuthenticated]
     lookup_field = 'id'
 
-
-class UpdateReceiptView(UpdateAPIView):
-    queryset = ReceiptModel.objects.all()
-    serializer_class = ReceiptSerializer 
-    permission_classes = [IsAuthenticated]  
-    lookup_field = 'id'
-
-class AddReceiptView(CreateAPIView):
-    permission_classes = [IsAuthenticated]
-    queryset = ReceiptModel.objects.all()
-    serializer_class = ReceiptSerializer
-
-class ListReceiptView(ListAPIView):
-    queryset = ReceiptModel.objects.all()
-    serializer_class = ReceiptSerializer
-    permission_classes = [IsAuthenticated]
-    # lookup_field = 'profuser'
-
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def profDashboard(request):
@@ -77,11 +60,9 @@ def profDashboard(request):
 
 @api_view(['GET'])
 def verifyLicense(request, license_id, programme):
-    if programme == 'Dental Therapist-Officer':
-        codeVar = 'DTH' + license_id
-        codeVar = 'DSA' + license_id
+    codeVar = programme+license_id
     user = get_object_or_404(User, code=codeVar)
-    license = licenseModel.objects.filter(prof_id=user.id).order_by('-created_date').last()
+    license = licenseModel.objects.filter(prof_id=user.id).order_by('-created_date').first()
     profDetails = Professional.objects.filter(profuser_id=user.id)
     details = professionalSerializer(profDetails, many=True).data
     license_data = licenseSerializer(license).data
@@ -90,3 +71,21 @@ def verifyLicense(request, license_id, programme):
         "profDetails": details
     }
     return Response({"data": context, "message": "License Retrieved Successfully"}, status=status.HTTP_200_OK)
+
+class UpdateLicenseReceiptView(UpdateAPIView):
+    queryset = LicenseReceipt.objects.all()
+    serializer_class = licenseReceiptSerializer 
+    permission_classes = [IsAuthenticated]  
+    lookup_field = 'id'
+
+class AddLicenseReceiptView(CreateAPIView):
+    queryset = LicenseReceipt.objects.all()
+    serializer_class = licenseReceiptSerializer
+
+class ListReceiptView(ListAPIView):
+    serializer_class = licenseReceiptSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user  # Get the authenticated user
+        return LicenseReceipt.objects.filter(profuser=user)
